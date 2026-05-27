@@ -3,7 +3,7 @@
 # Usage (standalone):  make cpu
 # Usage (manual):      docker compose -f docker-compose.yml -f docker-compose.cpu.yml -f docker-compose.lab.yml up -d
 #
-# Ryzen 5 1600 (6C/12T) — recommended models: 1B–3B at Q4
+#
 
 services:
   ollama:

@@ -3,8 +3,8 @@
 #
 #  Compose layers:
 #    docker-compose.yml          Base (Ollama + model-init)
-#    docker-compose.gpu.yml      GPU override  (RTX 2070)
-#    docker-compose.cpu.yml      CPU override  (Ryzen 5 1600)
+#    docker-compose.gpu.yml      GPU override  
+#    docker-compose.cpu.yml      CPU override  
 #    docker-compose.lab.yml      Custom Lab UI (port 3001)
 #    docker-compose.webui.yml    Open WebUI    (port 3000, optional)
 #

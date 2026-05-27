@@ -12,8 +12,8 @@ The project is built from **composable layers** — each file is independent and
 
 ```
 docker-compose.yml          ← Base: Ollama + model-init (always included)
-docker-compose.gpu.yml      ← GPU overlay  (RTX 2070)
-docker-compose.cpu.yml      ← CPU overlay  (Ryzen 5 1600)
+docker-compose.gpu.yml      ← GPU overlay  
+docker-compose.cpu.yml      ← CPU overlay  
 docker-compose.lab.yml      ← Custom Lab UI on :3001
 docker-compose.webui.yml    ← Open WebUI on :3000  (optional)
 ```
@@ -131,22 +131,6 @@ make help           Show this help
 make stop && make gpu    # switch to GPU
 make stop && make cpu    # switch to CPU
 ```
-
----
-
-## Recommended Models
-
-| Model | Size (Q4) | GPU | CPU | Best for |
-|-------|-----------|-----|-----|----------|
-| `minicpm5:1b`     | ~0.6 GB | ✅ fast | ✅ fast | Quick tests, edge tasks |
-| `qwen3:2b`        | ~1.5 GB | ✅ fast | ✅ ok   | General use, reasoning |
-| `llama3.2:3b`     | ~2.0 GB | ✅ fast | ⚠️ slow | General purpose |
-| `mistral:7b-q4_0` | ~4.1 GB | ✅ good | ❌      | Best GPU quality |
-| `codellama:7b`    | ~4.1 GB | ✅ good | ❌      | Code tasks |
-| `qwen3:8b`        | ~5.2 GB | ⚠️ tight| ❌      | Best reasoning (GPU only) |
-
-> **RTX 2070** (8 GB VRAM) — 7B Q4 fits comfortably.  
-> **Ryzen 5 1600** — stay at 1B–3B for usable speed.
 
 ---
 
