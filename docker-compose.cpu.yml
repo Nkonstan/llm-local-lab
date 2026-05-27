@@ -1,0 +1,17 @@
+# ── CPU override ─────────────────────────────────────────────────────────────
+# Forces CPU-only inference — no GPU device is passed to the container.
+# Usage (standalone):  make cpu
+# Usage (manual):      docker compose -f docker-compose.yml -f docker-compose.cpu.yml -f docker-compose.lab.yml up -d
+#
+# Ryzen 5 1600 (6C/12T) — recommended models: 1B–3B at Q4
+
+services:
+  ollama:
+    environment:
+      - CUDA_VISIBLE_DEVICES=""
+      - OLLAMA_NUM_THREAD=${OLLAMA_NUM_THREAD:-10}
+    deploy:
+      resources:
+        limits:
+          cpus: "${CPU_LIMIT:-10}"
+          memory: "${MEM_LIMIT:-12G}"

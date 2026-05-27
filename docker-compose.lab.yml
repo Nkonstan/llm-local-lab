@@ -1,0 +1,17 @@
+# ── Lab UI ───────────────────────────────────────────────────────────────────
+# Custom experimentation UI with live parameter controls and response timing.
+# Talks directly to Ollama's API from the browser (localhost:11434).
+# Usage: compose this file alongside the base + a hardware overlay.
+
+services:
+  lab-ui:
+    build:
+      context: ./services/lab-ui
+      dockerfile: Dockerfile
+    container_name: lab-ui
+    ports:
+      - "${LAB_PORT:-3001}:80"
+    depends_on:
+      ollama:
+        condition: service_healthy
+    restart: unless-stopped

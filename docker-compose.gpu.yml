@@ -1,0 +1,22 @@
+# ── GPU override ─────────────────────────────────────────────────────────────
+# Requires: NVIDIA drivers + nvidia-container-toolkit installed on the host.
+# Usage (standalone):  make gpu
+# Usage (manual):      docker compose -f docker-compose.yml -f docker-compose.gpu.yml -f docker-compose.lab.yml up -d
+#
+# RTX 2070 — 8 GB VRAM:
+#   7B  models at Q4  (~4 GB) ✅
+#   3B  models at Q4  (~2 GB) ✅
+#   1B  models at Q4  (~0.6 GB) ✅
+
+services:
+  ollama:
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    environment:
+      - CUDA_VISIBLE_DEVICES=0
+      - OLLAMA_GPU_LAYERS=${OLLAMA_GPU_LAYERS:-99}
