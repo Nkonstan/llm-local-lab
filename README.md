@@ -43,10 +43,10 @@ llm-local/
 # 1. Set up config
 cp .env.example .env
 
-# 2a. Start with GPU (RTX 2070) — most common
+# 2a. Start with GPU  — most common
 make gpu
 
-# 2b. Start with CPU (Ryzen 5 1600)
+# 2b. Start with CPU 
 make cpu
 
 # 3. Open the Lab UI
@@ -168,3 +168,7 @@ make rebuild-ui
 ```
 
 This rebuilds only the `lab-ui` container and restarts it without touching Ollama or loaded models.
+
+## License
+
+MIT © 2025 [Nkonstan](https://github.com/Nkonstan/llm-local-lab)

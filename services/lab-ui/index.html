@@ -124,6 +124,49 @@ header {
   white-space: nowrap;
 }
 .header-btn:hover { background: var(--surface3); color: var(--text); border-color: var(--border2); }
+.header-btn-danger { color: var(--red); border-color: rgba(248,113,113,.3); }
+.header-btn-danger:hover { background: rgba(248,113,113,.12); color: var(--red); border-color: var(--red); }
+
+/* ── Delete confirmation modal ───────────────────────────────────── */
+#delete-modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.65);
+  z-index: 300;
+  align-items: center;
+  justify-content: center;
+}
+#delete-modal-overlay.open { display: flex; }
+#delete-modal {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 14px;
+  padding: 28px 28px 24px;
+  width: 360px;
+  max-width: 92vw;
+  text-align: center;
+  box-shadow: 0 24px 64px rgba(0,0,0,.6);
+  animation: modalIn .15s ease;
+}
+.del-icon { font-size: 36px; margin-bottom: 10px; }
+.del-title { font-size: 16px; font-weight: 600; color: var(--text); margin-bottom: 10px; }
+.del-body  { font-size: 13px; color: var(--text-muted); line-height: 1.6; margin-bottom: 22px; }
+.del-body strong { color: var(--text); font-weight: 600; }
+.del-actions { display: flex; gap: 10px; justify-content: center; }
+.del-btn {
+  padding: 8px 24px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid var(--border2);
+  transition: all .15s;
+}
+.del-btn-cancel { background: var(--surface2); color: var(--text-muted); }
+.del-btn-cancel:hover { background: var(--surface3); color: var(--text); }
+.del-btn-confirm { background: rgba(248,113,113,.15); color: var(--red); border-color: rgba(248,113,113,.4); }
+.del-btn-confirm:hover { background: var(--red); color: #fff; border-color: var(--red); }
 
 /* ── Workspace ───────────────────────────────────────── */
 .workspace {
@@ -476,22 +519,105 @@ input[type="range"]::-moz-range-thumb {
 
 /* Thinking block */
 .thinking-block {
-  background: rgba(251,191,36,.06);
-  border: 1px solid rgba(251,191,36,.15);
-  border-radius: 7px;
-  padding: 8px 12px;
-  margin-bottom: 8px;
-  font-size: 12px;
-  color: var(--text-muted);
+  background: rgba(251,191,36,.05);
+  border: 1px solid rgba(251,191,36,.18);
+  border-radius: 8px;
+  margin-bottom: 10px;
+  overflow: hidden;
 }
-.thinking-label {
-  font-size: 10px;
+.thinking-toggle {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 12px;
+  cursor: pointer;
+  user-select: none;
+  font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: .06em;
   color: var(--yellow);
-  margin-bottom: 4px;
+  background: transparent;
+  border: none;
+  width: 100%;
+  text-align: left;
+  transition: background .12s;
 }
+.thinking-toggle:hover { background: rgba(251,191,36,.06); }
+.thinking-chevron {
+  margin-left: auto;
+  font-size: 10px;
+  transition: transform .2s;
+  color: var(--text-dim);
+}
+.thinking-block.open .thinking-chevron { transform: rotate(180deg); }
+.thinking-content {
+  display: none;
+  padding: 0 12px 10px;
+  font-size: 11.5px;
+  color: var(--text-muted);
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+  border-top: 1px solid rgba(251,191,36,.1);
+  max-height: 300px;
+  overflow-y: auto;
+}
+.thinking-block.open .thinking-content { display: block; }
+.thinking-token-count {
+  font-size: 10px;
+  color: var(--text-dim);
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  margin-left: 4px;
+}
+
+/* ── Thinking mode controls ──────────────────────────────── */
+.think-mode-row {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+.think-mode-btn {
+  flex: 1;
+  padding: 5px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .15s;
+  text-align: center;
+}
+.think-mode-btn:hover { border-color: var(--border2); color: var(--text); }
+.think-mode-btn.active-think   { background: rgba(251,191,36,.12); border-color: rgba(251,191,36,.4); color: var(--yellow); }
+.think-mode-btn.active-budget  { background: rgba(139,114,248,.12); border-color: rgba(139,114,248,.4); color: var(--accent); }
+.think-mode-btn.active-nothink { background: rgba(74,222,128,.12); border-color: rgba(74,222,128,.4); color: var(--green); }
+
+.think-budget-row {
+  display: flex;
+  gap: 4px;
+  margin-top: 4px;
+}
+.think-level-btn {
+  flex: 1;
+  padding: 4px 6px;
+  border-radius: 5px;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .15s;
+  text-align: center;
+}
+.think-level-btn:hover { border-color: var(--border2); color: var(--text); }
+.think-level-btn.active { background: rgba(139,114,248,.15); border-color: var(--accent); color: var(--accent); }
 
 /* Cursor while streaming */
 .stream-cursor::after {
@@ -669,6 +795,331 @@ input[type="range"]::-moz-range-thumb {
   text-align: right;
 }
 
+/* ── Model browser modal ─────────────────────────────── */
+#model-modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.65);
+  z-index: 200;
+  align-items: center;
+  justify-content: center;
+}
+#model-modal-overlay.open { display: flex; }
+
+#model-modal {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 14px;
+  width: 680px;
+  max-width: 95vw;
+  max-height: 82vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 24px 64px rgba(0,0,0,.6);
+  animation: modalIn .18s ease;
+}
+@keyframes modalIn {
+  from { opacity: 0; transform: translateY(12px) scale(.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.modal-header {
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+.modal-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+  flex: 1;
+}
+.modal-close {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 18px;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 5px;
+  line-height: 1;
+  transition: color .15s, background .15s;
+}
+.modal-close:hover { color: var(--text); background: var(--surface2); }
+
+.modal-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}
+
+.modal-tab {
+  padding: 4px 11px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .15s;
+  white-space: nowrap;
+  letter-spacing: .02em;
+}
+.modal-tab:hover { border-color: var(--border2); color: var(--text); background: var(--surface2); }
+.modal-tab.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.modal-status-bar {
+  padding: 4px 16px 6px;
+  flex-shrink: 0;
+}
+#modal-status {
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.modal-search-wrap {
+  padding: 12px 12px 8px;
+  flex-shrink: 0;
+}
+#modal-search {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 13px;
+  padding: 8px 12px;
+  transition: border-color .15s;
+}
+#modal-search:focus { outline: none; border-color: var(--accent); }
+#modal-search::placeholder { color: var(--text-dim); }
+
+.modal-status {
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-top: 6px;
+}
+
+.modal-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.modal-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-dim);
+  font-size: 13px;
+}
+
+.model-card {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 11px 14px;
+  cursor: pointer;
+  transition: border-color .12s, background .12s;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.model-card:hover { border-color: var(--accent); background: var(--surface3); }
+.model-card.already-have { opacity: .55; cursor: default; }
+.model-card.already-have:hover { border-color: var(--border); background: var(--surface2); }
+
+.model-card-info { flex: 1; min-width: 0; }
+.model-card-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 3px;
+}
+.model-badge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 3px;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+.model-badge.installed { background: rgba(74,222,128,.12); color: var(--green); border: 1px solid rgba(74,222,128,.25); }
+.model-badge.cat-general   { background: rgba(96,165,250,.12);  color: var(--blue);   border: 1px solid rgba(96,165,250,.25); }
+.model-badge.cat-reasoning { background: rgba(139,114,248,.12); color: var(--accent); border: 1px solid rgba(139,114,248,.25); }
+.model-badge.cat-coding    { background: rgba(74,222,128,.12);  color: var(--green);  border: 1px solid rgba(74,222,128,.25); }
+.model-badge.cat-compact   { background: rgba(251,191,36,.12);  color: var(--yellow); border: 1px solid rgba(251,191,36,.25); }
+.model-badge.cat-vision    { background: rgba(248,113,113,.12); color: var(--red);    border: 1px solid rgba(248,113,113,.25); }
+.model-badge.cat-uncensored { background: rgba(248,113,113,.10); color: var(--red);    border: 1px solid rgba(248,113,113,.22); }
+.model-badge.cat-embedding { background: rgba(128,128,164,.12); color: var(--text-muted); border: 1px solid rgba(128,128,164,.25); }
+.model-badge.size { background: var(--surface3); color: var(--text-muted); border: 1px solid var(--border); }
+
+.model-card-desc {
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.model-card-meta {
+  font-size: 11px;
+  color: var(--text-dim);
+  white-space: nowrap;
+  flex-shrink: 0;
+  text-align: right;
+}
+
+.modal-footer {
+  padding: 10px 20px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+#modal-custom-input {
+  flex: 1;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  color: var(--text);
+  font-size: 12px;
+  padding: 6px 10px;
+  transition: border-color .15s;
+}
+#modal-custom-input:focus { outline: none; border-color: var(--accent); }
+#modal-custom-input::placeholder { color: var(--text-dim); }
+#modal-pull-custom {
+  background: var(--accent);
+  border: none;
+  border-radius: 7px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 14px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .15s;
+}
+#modal-pull-custom:hover { background: var(--accent2); }
+
+/* Size pills on model cards */
+.model-card-sizes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 4px 0 5px;
+}
+.size-pill {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 7px;
+  border-radius: 10px;
+  background: var(--surface3);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  letter-spacing: .03em;
+}
+
+/* Size picker popover */
+#size-picker {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0; right: 0;
+  background: var(--surface3);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  padding: 10px 12px 12px;
+  z-index: 300;
+  box-shadow: 0 8px 32px rgba(0,0,0,.5);
+  animation: modalIn .12s ease;
+}
+.sp-arrow {
+  position: absolute;
+  bottom: -6px;
+  left: 20px;
+  width: 10px; height: 10px;
+  background: var(--surface3);
+  border-right: 1px solid var(--border2);
+  border-bottom: 1px solid var(--border2);
+  transform: rotate(45deg);
+}
+.sp-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 2px;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+.sp-hint {
+  font-size: 10px;
+  color: var(--text-dim);
+  margin-bottom: 8px;
+}
+.sp-sizes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.sp-btn {
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  color: var(--text);
+  border-radius: 7px;
+  padding: 5px 13px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .12s;
+}
+.sp-btn:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
+.sp-default { color: var(--text-muted); font-weight: 400; font-style: italic; }
+.sp-default:hover { color: #fff; }
+
+/* Pull progress overlay on card */
+.model-card.pulling {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+  cursor: default;
+  pointer-events: none;
+}
+.pull-progress {
+  font-size: 11px;
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.pull-spinner {
+  width: 12px; height: 12px;
+  border: 2px solid rgba(139,114,248,.3);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+  flex-shrink: 0;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
 /* ── Toast notification ──────────────────────────────── */
 #toast {
   position: fixed;
@@ -708,6 +1159,10 @@ input[type="range"]::-moz-range-thumb {
     <select id="model-select" title="Active model">
       <option value="">Loading models…</option>
     </select>
+
+    <button class="header-btn header-btn-danger" id="delete-model-btn" title="Delete selected model from disk" style="display:none">
+      🗑 Delete
+    </button>
 
     <button class="header-btn" id="pull-model-btn" title="Pull a new model from Ollama library">
       ＋ Pull Model
@@ -787,6 +1242,25 @@ input[type="range"]::-moz-range-thumb {
           <div class="param-hint">Total tokens in context (prompt + reply).</div>
         </div>
 
+        <!-- Thinking Mode -->
+        <div class="param-block">
+          <div class="param-row">
+            <span class="param-label">Thinking Mode</span>
+          </div>
+          <div class="think-mode-row">
+            <button class="think-mode-btn active-think" id="think-btn-on"    data-mode="on">💭 Think</button>
+            <button class="think-mode-btn"              id="think-btn-budget" data-mode="budget">⏱ Budget</button>
+            <button class="think-mode-btn"              id="think-btn-off"   data-mode="off">⚡ No Think</button>
+          </div>
+          <div class="think-budget-row" id="think-budget-row" style="display:none">
+            <button class="think-level-btn active" data-level="low">Low</button>
+            <button class="think-level-btn" data-level="medium">Medium</button>
+            <button class="think-level-btn" data-level="high">High</button>
+            <button class="think-level-btn" data-level="max">Max</button>
+          </div>
+          <div class="param-hint" id="think-mode-hint">Model reasons internally before answering. Slower but smarter.</div>
+        </div>
+
         <!-- Seed -->
         <div class="param-block">
           <div class="param-row">
@@ -847,6 +1321,45 @@ input[type="range"]::-moz-range-thumb {
   </div>
 </div>
 
+<!-- ── Model browser modal ──────────────────────────────────────────── -->
+<div id="model-modal-overlay">
+  <div id="model-modal">
+    <div class="modal-header">
+      <span class="modal-title">🔍 Browse &amp; Pull Models</span>
+      <button class="modal-close" id="modal-close-btn" title="Close">✕</button>
+    </div>
+    <div class="modal-search-wrap">
+      <input id="modal-search" type="text" placeholder="Search models… (e.g. llama, mistral, qwen, code)">
+    </div>
+    <div class="modal-tabs" id="modal-tabs"></div>
+    <div class="modal-status-bar">
+      <span id="modal-status">Loading…</span>
+    </div>
+    <div class="modal-list" id="modal-list">
+      <div class="modal-empty">Loading…</div>
+    </div>
+    <div class="modal-footer">
+      <input id="modal-custom-input" type="text" placeholder="Or type a custom model name (e.g. mistral:7b-q4_0)">
+      <button id="modal-pull-custom">Pull</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Delete confirmation modal ─────────────────────────────────────── -->
+<div id="delete-modal-overlay">
+  <div id="delete-modal">
+    <div class="del-icon">🗑</div>
+    <div class="del-title">Delete model?</div>
+    <div class="del-body">
+      This will permanently remove <strong id="del-model-name"></strong> from disk. You can re-pull it anytime.
+    </div>
+    <div class="del-actions">
+      <button id="del-cancel-btn" class="del-btn del-btn-cancel">Cancel</button>
+      <button id="del-confirm-btn" class="del-btn del-btn-confirm">Delete</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast"></div>
 
 <script>
@@ -861,9 +1374,11 @@ const DEFAULT_PARAMS = {
   top_p:          0.9,
   top_k:          40,
   repeat_penalty: 1.1,
-  max_tokens:     2048,
-  num_ctx:        4096,
+  max_tokens:     12288,
+  num_ctx:        12288,
   seed:           -1,
+  think_mode:     'budget', // 'on' | 'budget' | 'off'
+  think_budget:   2000,
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -890,14 +1405,70 @@ const $systemPrompt  = document.getElementById('system-prompt');
 const $newChatBtn    = document.getElementById('new-chat-btn');
 const $resetBtn      = document.getElementById('reset-params-btn');
 const $pullModelBtn  = document.getElementById('pull-model-btn');
+const $deleteModelBtn = document.getElementById('delete-model-btn');
 const $welcome       = document.getElementById('welcome');
 const $toast         = document.getElementById('toast');
+
+// ── Delete model ──────────────────────────────────────────────────────────────
+
+const $deleteOverlay  = document.getElementById('delete-modal-overlay');
+const $delModelName   = document.getElementById('del-model-name');
+const $delCancelBtn   = document.getElementById('del-cancel-btn');
+const $delConfirmBtn  = document.getElementById('del-confirm-btn');
+
+// Show/hide delete button based on whether a real model is selected
+$modelSelect.addEventListener('change', () => {
+  $deleteModelBtn.style.display = $modelSelect.value ? 'inline-flex' : 'none';
+});
+
+function openDeleteModal() {
+  const model = $modelSelect.value;
+  if (!model) return;
+  $delModelName.textContent = model;
+  $deleteOverlay.classList.add('open');
+}
+
+function closeDeleteModal() {
+  $deleteOverlay.classList.remove('open');
+}
+
+async function confirmDelete() {
+  const model = $modelSelect.value;
+  if (!model) return;
+  closeDeleteModal();
+  showToast(`Deleting ${model}…`);
+  try {
+    const res = await fetch(`${OLLAMA_BASE}/api/delete`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: model }),
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    showToast(`✅ ${model} deleted`);
+    await loadModels();
+    // Hide delete button if no models left
+    $deleteModelBtn.style.display = $modelSelect.value ? 'inline-flex' : 'none';
+  } catch (e) {
+    showToast(`❌ Delete failed: ${e.message}`);
+  }
+}
+
+$deleteModelBtn.addEventListener('click', openDeleteModal);
+$delCancelBtn.addEventListener('click', closeDeleteModal);
+$delConfirmBtn.addEventListener('click', confirmDelete);
+$deleteOverlay.addEventListener('click', e => { if (e.target === $deleteOverlay) closeDeleteModal(); });
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { closeDeleteModal(); }
+});
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  Parameter binding
 // ─────────────────────────────────────────────────────────────────────────────
 
 function getParams() {
+  const activeBtn = document.querySelector('.think-mode-btn.active-think, .think-mode-btn.active-budget, .think-mode-btn.active-nothink');
+  const think_mode = activeBtn ? activeBtn.dataset.mode : 'on';
+  const activeLevelBtn = document.querySelector('.think-level-btn.active');
   return {
     temperature:    parseFloat(document.getElementById('temperature').value),
     top_p:          parseFloat(document.getElementById('top_p').value),
@@ -906,6 +1477,8 @@ function getParams() {
     max_tokens:     parseInt(document.getElementById('max_tokens').value, 10),
     num_ctx:        parseInt(document.getElementById('num_ctx').value, 10),
     seed:           parseInt(document.getElementById('seed').value, 10),
+    think_mode,
+    think_level:    activeLevelBtn ? activeLevelBtn.dataset.level : 'low',
   };
 }
 
@@ -917,6 +1490,8 @@ function resetParams() {
   document.getElementById('max_tokens').value     = DEFAULT_PARAMS.max_tokens;
   document.getElementById('num_ctx').value        = DEFAULT_PARAMS.num_ctx;
   document.getElementById('seed').value           = DEFAULT_PARAMS.seed;
+  document.getElementById('think-budget').value   = DEFAULT_PARAMS.think_budget;
+  setThinkMode(DEFAULT_PARAMS.think_mode);
   updateParamDisplays();
   showToast('Parameters reset to defaults');
 }
@@ -944,6 +1519,44 @@ function updateParamDisplays() {
 updateParamDisplays();
 
 // ─────────────────────────────────────────────────────────────────────────────
+//  Thinking mode controls
+// ─────────────────────────────────────────────────────────────────────────────
+
+const THINK_HINTS = {
+  on:     'Model reasons internally before answering. Slower but smarter.',
+  budget: 'Limits thinking to N tokens. Balances speed and quality.',
+  off:    'Skips thinking entirely. Fast responses, less deep reasoning.',
+};
+const THINK_ACTIVE_CLASS = {
+  on:     'active-think',
+  budget: 'active-budget',
+  off:    'active-nothink',
+};
+
+function setThinkMode(mode) {
+  document.querySelectorAll('.think-mode-btn').forEach(btn => {
+    btn.classList.remove('active-think', 'active-budget', 'active-nothink');
+    if (btn.dataset.mode === mode) btn.classList.add(THINK_ACTIVE_CLASS[mode]);
+  });
+  const budgetRow = document.getElementById('think-budget-row');
+  budgetRow.style.display = mode === 'budget' ? 'flex' : 'none';
+  document.getElementById('think-mode-hint').textContent = THINK_HINTS[mode];
+}
+
+document.querySelectorAll('.think-mode-btn').forEach(btn => {
+  btn.addEventListener('click', () => setThinkMode(btn.dataset.mode));
+});
+
+document.querySelectorAll('.think-level-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.think-level-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  });
+});
+
+setThinkMode(DEFAULT_PARAMS.think_mode);
+
+// ─────────────────────────────────────────────────────────────────────────────
 //  Model management
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -966,6 +1579,8 @@ async function loadModels() {
     }
 
     setStatus('connected', `${models.length} model${models.length !== 1 ? 's' : ''} available`);
+    // Sync delete button visibility
+    $deleteModelBtn.style.display = $modelSelect.value ? 'inline-flex' : 'none';
   } catch (e) {
     $modelSelect.innerHTML = '<option value="">Cannot reach Ollama</option>';
     setStatus('error', 'Ollama unreachable — is it running?');
@@ -977,25 +1592,411 @@ function formatModelName(name) {
   return name.length > 36 ? name.slice(0, 34) + '…' : name;
 }
 
-async function pullModel() {
-  const model = prompt('Enter model name to pull (e.g. mistral:7b-q4_0):');
-  if (!model || !model.trim()) return;
-  showToast(`Pulling ${model.trim()}… check Ollama logs for progress`);
+// ─────────────────────────────────────────────────────────────────────────────
+//  Model browser modal
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Curated model list — sourced from ollama.com/library (top models by pulls)
+const BUNDLED_MODELS = [
+  // ── General ───────────────────────────────────────────────────────────
+  { model_identifier:'llama3.1',             model_name:'Llama 3.1',              labels:['8b','70b','405b'],                    pulls:116_600_000, category:'General',   description:'Meta\'s state-of-the-art model available in 8B, 70B and 405B sizes.' },
+  { model_identifier:'llama3.2',             model_name:'Llama 3.2',              labels:['1b','3b'],                            pulls:74_700_000,  category:'General',   description:'Meta\'s Llama 3.2 — small 1B and 3B models, great for CPU.' },
+  { model_identifier:'mistral',              model_name:'Mistral 7B',             labels:['7b'],                                 pulls:30_600_000,  category:'General',   description:'The 7B model from Mistral AI, updated to v0.3. Fast and capable.' },
+  { model_identifier:'gemma2',               model_name:'Gemma 2',                labels:['2b','9b','27b'],                      pulls:26_700_000,  category:'General',   description:'Google Gemma 2 — high-performing efficient model in 2B, 9B, 27B.' },
+  { model_identifier:'llama3',               model_name:'Llama 3',                labels:['8b','70b'],                           pulls:24_600_000,  category:'General',   description:'Meta Llama 3: the most capable openly available LLM at the time.' },
+  { model_identifier:'phi3',                 model_name:'Phi 3',                  labels:['3.8b','14b'],                         pulls:17_800_000,  category:'General',   description:'Microsoft Phi-3 — lightweight 3B and 14B state-of-the-art open models.' },
+  { model_identifier:'gemma4',               model_name:'Gemma 4',                labels:['e2b','e4b','12b','26b','31b'],        pulls:16_300_000,  category:'General',   description:'Google Gemma 4 — frontier-level performance, reasoning, coding, multimodal.' },
+  { model_identifier:'gpt-oss',              model_name:'GPT OSS (OpenAI)',       labels:['20b','120b'],                         pulls:10_600_000,  category:'General',   description:'OpenAI\'s open-weight MoE models. gpt-oss:20b runs on 16 GB RAM.' },
+  { model_identifier:'phi4',                 model_name:'Phi 4',                  labels:['14b'],                                pulls:7_600_000,   category:'General',   description:'Microsoft Phi-4 — 14B state-of-the-art open model.' },
+  { model_identifier:'gemma',                model_name:'Gemma',                  labels:['2b','7b'],                            pulls:7_200_000,   category:'General',   description:'Google DeepMind Gemma — lightweight, state-of-the-art open models.' },
+  { model_identifier:'llama2',               model_name:'Llama 2',                labels:['7b','13b','70b'],                     pulls:7_200_000,   category:'General',   description:'Meta Llama 2 — foundation models ranging from 7B to 70B parameters.' },
+  { model_identifier:'llama3.3',             model_name:'Llama 3.3',              labels:['70b'],                                pulls:4_000_000,   category:'General',   description:'New state-of-the-art 70B model — similar performance to Llama 3.1 405B.' },
+  { model_identifier:'mistral-nemo',         model_name:'Mistral Nemo',           labels:['12b'],                                pulls:5_200_000,   category:'General',   description:'State-of-the-art 12B model with 128K context, by Mistral AI + NVIDIA.' },
+  { model_identifier:'olmo2',                model_name:'OLMo 2',                 labels:['7b','13b'],                           pulls:3_700_000,   category:'General',   description:'7B and 13B models trained on 5T tokens — competitive with Llama 3.1.' },
+  { model_identifier:'mistral-small',        model_name:'Mistral Small 3',        labels:['22b','24b'],                          pulls:3_100_000,   category:'General',   description:'Mistral Small 3 — new benchmark below 70B. Strong instruction following.' },
+  { model_identifier:'mistral-small3.1',     model_name:'Mistral Small 3.1',      labels:['24b'],                                pulls:756_900,     category:'General',   description:'Mistral Small 3.1 — adds vision + 128K context over Mistral Small 3.' },
+  { model_identifier:'mistral-small3.2',     model_name:'Mistral Small 3.2',      labels:['24b'],                                pulls:2_300_000,   category:'General',   description:'Updated Mistral Small with improved function calling and instruction following.' },
+  { model_identifier:'dolphin3',             model_name:'Dolphin 3',              labels:['8b'],                                 pulls:3_900_000,   category:'General',   description:'Dolphin 3.0 Llama 3.1 8B — general purpose: coding, math, agentic tasks.' },
+  { model_identifier:'falcon3',              model_name:'Falcon 3',               labels:['1b','3b','7b','10b'],                 pulls:2_600_000,   category:'General',   description:'Efficient AI models under 10B — strong in science, math, and coding.' },
+  { model_identifier:'mistral-large',        model_name:'Mistral Large 2',        labels:['123b'],                               pulls:1_200_000,   category:'General',   description:'Mistral\'s flagship 123B model — strong code, math, reasoning, 128K context.' },
+  { model_identifier:'hermes3',              model_name:'Hermes 3',               labels:['3b','8b','70b','405b'],               pulls:1_500_000,   category:'General',   description:'Latest Hermes series from Nous Research — versatile instruct model.' },
+  { model_identifier:'command-r',            model_name:'Command R',              labels:['35b'],                                pulls:1_400_000,   category:'General',   description:'Cohere Command R — optimized for conversation and long-context tasks.' },
+  { model_identifier:'aya-expanse',          model_name:'Aya Expanse',            labels:['8b','32b'],                           pulls:950_500,     category:'General',   description:'Cohere multilingual models trained across 23 languages.' },
+  { model_identifier:'aya',                  model_name:'Aya 23',                 labels:['8b','35b'],                           pulls:1_000_000,   category:'General',   description:'Cohere Aya 23 — state-of-the-art multilingual model, 23 languages.' },
+  { model_identifier:'phi4-mini',            model_name:'Phi 4 Mini',             labels:['3.8b'],                               pulls:1_200_000,   category:'General',   description:'Phi-4-mini — multilingual support, reasoning, function calling in 3.8B.' },
+  { model_identifier:'phi3.5',               model_name:'Phi 3.5',                labels:['3.8b'],                               pulls:968_400,     category:'General',   description:'Lightweight 3.8B model overtaking similarly and larger sized models.' },
+  // ── Reasoning / thinking ──────────────────────────────────────────────
+  { model_identifier:'deepseek-r1',          model_name:'DeepSeek R1',            labels:['1.5b','7b','8b','14b','32b','70b','671b'], pulls:88_900_000, category:'Reasoning', description:'Family of open reasoning models approaching O3 and Gemini 2.5 Pro.' },
+  { model_identifier:'qwen3',                model_name:'Qwen 3',                 labels:['0.6b','1.7b','4b','8b','14b','30b','32b','235b'], pulls:31_600_000, category:'Reasoning', description:'Latest Qwen series — dense and MoE models with thinking support.' },
+  { model_identifier:'qwen3.5',              model_name:'Qwen 3.5',               labels:['0.8b','2b','4b','9b','27b','35b','122b'], pulls:14_500_000, category:'Reasoning', description:'Qwen 3.5 — open-source multimodal models with vision, tools, thinking.' },
+  { model_identifier:'qwen2.5',              model_name:'Qwen 2.5',               labels:['0.5b','1.5b','3b','7b','14b','32b','72b'], pulls:33_800_000, category:'Reasoning', description:'Pretrained on 18T tokens — 128K context, multilingual, strong reasoning.' },
+  { model_identifier:'deepseek-v3',          model_name:'DeepSeek V3',            labels:['671b'],                               pulls:3_800_000,   category:'Reasoning', description:'Strong MoE model — 671B total, 37B active per token.' },
+  { model_identifier:'deepseek-v3.1',        model_name:'DeepSeek V3.1',          labels:['671b'],                               pulls:703_500,     category:'Reasoning', description:'Hybrid model supporting both thinking and non-thinking mode.' },
+  { model_identifier:'deepseek-v3.2',        model_name:'DeepSeek V3.2',          labels:['cloud'],                              pulls:2_200_000,   category:'Reasoning', description:'Harmonizes high computational efficiency with superior reasoning.' },
+  { model_identifier:'qwq',                  model_name:'QwQ',                    labels:['32b'],                                pulls:2_300_000,   category:'Reasoning', description:'QwQ — the reasoning model of the Qwen series, 32B.' },
+  { model_identifier:'phi4-reasoning',       model_name:'Phi 4 Reasoning',        labels:['14b'],                                pulls:1_600_000,   category:'Reasoning', description:'Phi 4 Reasoning — 14B open-weight model rivaling much larger models.' },
+  { model_identifier:'cogito',               model_name:'Cogito',                 labels:['3b','8b','14b','32b','70b'],          pulls:2_000_000,   category:'Reasoning', description:'Hybrid reasoning models outperforming best open models of same size.' },
+  { model_identifier:'openthinker',          model_name:'OpenThinker',            labels:['7b','32b'],                           pulls:1_100_000,   category:'Reasoning', description:'Fully open-source reasoning models built from DeepSeek-R1 distillation.' },
+  { model_identifier:'magistral',            model_name:'Magistral',              labels:['24b'],                                pulls:1_400_000,   category:'Reasoning', description:'Mistral\'s small efficient reasoning model, 24B parameters.' },
+  { model_identifier:'qwen3.6',              model_name:'Qwen 3.6',               labels:['27b','35b'],                          pulls:3_300_000,   category:'Reasoning', description:'Qwen3.6 — upgrades in agentic coding and thinking preservation.' },
+  { model_identifier:'qwen3-next',           model_name:'Qwen 3 Next',            labels:['80b'],                                pulls:570_200,     category:'Reasoning', description:'First Qwen3-Next installment — strong parameter efficiency and speed.' },
+  { model_identifier:'deepscaler',           model_name:'DeepScaler',             labels:['1.5b'],                               pulls:1_200_000,   category:'Reasoning', description:'1.5B model surpassing OpenAI o1-preview on math evaluations.' },
+  { model_identifier:'r1-1776',              model_name:'R1-1776',                labels:['70b','671b'],                         pulls:407_400,     category:'Reasoning', description:'DeepSeek-R1 post-trained by Perplexity for unbiased, factual output.' },
+  { model_identifier:'exaone-deep',          model_name:'EXAONE Deep',            labels:['2.4b','7.8b','32b'],                  pulls:744_700,     category:'Reasoning', description:'Superior reasoning in math and coding benchmarks, by LG AI Research.' },
+  { model_identifier:'phi4-mini-reasoning',  model_name:'Phi 4 Mini Reasoning',   labels:['3.8b'],                               pulls:277_300,     category:'Reasoning', description:'Lightweight 3.8B model balancing efficiency with advanced reasoning.' },
+  { model_identifier:'deepseek-v4-flash',    model_name:'DeepSeek V4 Flash',      labels:['cloud'],                              pulls:176_200,     category:'Reasoning', description:'Preview of DeepSeek-V4 — 284B MoE, 13B active, 1M context window.' },
+  { model_identifier:'deepseek-v4-pro',      model_name:'DeepSeek V4 Pro',        labels:['cloud'],                              pulls:172_400,     category:'Reasoning', description:'Frontier MoE model with large context window and three reasoning modes.' },
+  // ── Coding ────────────────────────────────────────────────────────────
+  { model_identifier:'qwen2.5-coder',        model_name:'Qwen 2.5 Coder',         labels:['0.5b','1.5b','3b','7b','14b','32b'], pulls:17_900_000,  category:'Coding',    description:'Code-specific Qwen models — improved code generation, reasoning, fixing.' },
+  { model_identifier:'codellama',            model_name:'Code Llama',              labels:['7b','13b','34b','70b'],               pulls:5_700_000,   category:'Coding',    description:'Meta Code Llama — code generation across many languages via text prompts.' },
+  { model_identifier:'qwen3-coder',          model_name:'Qwen 3 Coder',           labels:['30b','480b'],                         pulls:6_900_000,   category:'Coding',    description:'Alibaba\'s long-context model for agentic coding tasks. 256K context.' },
+  { model_identifier:'codegemma',            model_name:'CodeGemma',              labels:['2b','7b'],                            pulls:3_000_000,   category:'Coding',    description:'Google CodeGemma — fill-in-the-middle completion, code generation.' },
+  { model_identifier:'starcoder2',           model_name:'StarCoder 2',            labels:['3b','7b','15b'],                      pulls:2_900_000,   category:'Coding',    description:'Next generation transparently trained open code LLMs in 3B/7B/15B.' },
+  { model_identifier:'deepseek-coder-v2',    model_name:'DeepSeek Coder V2',      labels:['16b','236b'],                         pulls:2_700_000,   category:'Coding',    description:'Open MoE code model achieving GPT-4-Turbo performance on code tasks.' },
+  { model_identifier:'devstral',             model_name:'Devstral',               labels:['24b'],                                pulls:970_700,     category:'Coding',    description:'Best open source model for coding agents — 46.8% SWE-Bench Verified.' },
+  { model_identifier:'deepseek-coder',       model_name:'DeepSeek Coder',         labels:['1.3b','6.7b','33b'],                  pulls:4_300_000,   category:'Coding',    description:'Trained on 2T code and natural language tokens — strong code model.' },
+  { model_identifier:'qwen3-coder-next',     model_name:'Qwen 3 Coder Next',      labels:['cloud'],                              pulls:1_700_000,   category:'Coding',    description:'Coding-focused model optimized for agentic coding and local development.' },
+  { model_identifier:'granite-code',         model_name:'Granite Code',           labels:['3b','8b','20b','34b'],                pulls:1_400_000,   category:'Coding',    description:'IBM open foundation models for Code Intelligence, 3B to 34B.' },
+  { model_identifier:'codestral',            model_name:'Codestral',              labels:['22b'],                                pulls:1_300_000,   category:'Coding',    description:'Mistral AI\'s first code model designed for code generation tasks.' },
+  { model_identifier:'deepcoder',            model_name:'DeepCoder',              labels:['1.5b','14b'],                         pulls:881_200,     category:'Coding',    description:'Fully open-source 14B coder model at O3-mini level performance.' },
+  { model_identifier:'starcoder',            model_name:'StarCoder',              labels:['1b','3b','7b','15b'],                 pulls:1_100_000,   category:'Coding',    description:'Code generation model trained on 80+ programming languages.' },
+  { model_identifier:'codeqwen',             model_name:'CodeQwen 1.5',           labels:['7b'],                                 pulls:1_100_000,   category:'Coding',    description:'CodeQwen1.5 — pretrained on large amount of code data.' },
+  { model_identifier:'yi-coder',             model_name:'Yi Coder',               labels:['1.5b','9b'],                          pulls:996_600,     category:'Coding',    description:'Open-source code language models — state-of-the-art under 10B params.' },
+  { model_identifier:'wizardcoder',          model_name:'WizardCoder',            labels:['33b'],                                pulls:997_500,     category:'Coding',    description:'State-of-the-art code generation model.' },
+  { model_identifier:'sqlcoder',             model_name:'SQLCoder',               labels:['7b','15b'],                           pulls:1_100_000,   category:'Coding',    description:'Code completion model fine-tuned on StarCoder for SQL generation.' },
+  { model_identifier:'opencoder',            model_name:'OpenCoder',              labels:['1.5b','8b'],                          pulls:604_600,     category:'Coding',    description:'Open and reproducible code LLM family — 1.5B and 8B, English + Chinese.' },
+  { model_identifier:'granite4',             model_name:'Granite 4',              labels:['350m','1b','3b'],                     pulls:1_300_000,   category:'Coding',    description:'IBM Granite 4 — improved instruction following and tool-calling.' },
+  { model_identifier:'granite4.1',           model_name:'Granite 4.1',            labels:['3b','8b','30b'],                      pulls:211_900,     category:'Coding',    description:'IBM Granite enterprise-ready models — multilingual, RAG, tool use, JSON.' },
+  { model_identifier:'duckdb-nsql',          model_name:'DuckDB NSQL',            labels:['7b'],                                 pulls:507_300,     category:'Coding',    description:'7B text-to-SQL model by MotherDuck and Numbers Station.' },
+  // ── Vision / Multimodal ───────────────────────────────────────────────
+  { model_identifier:'llava',                model_name:'LLaVA',                  labels:['7b','13b','34b'],                     pulls:14_300_000,  category:'Vision',    description:'End-to-end trained multimodal model — vision encoder + language. v1.6.' },
+  { model_identifier:'gemma3',               model_name:'Gemma 3',                labels:['270m','1b','4b','12b','27b'],         pulls:38_200_000,  category:'Vision',    description:'Google\'s most capable model that runs on a single GPU — vision + tools.' },
+  { model_identifier:'llama3.2-vision',      model_name:'Llama 3.2 Vision',       labels:['11b','90b'],                          pulls:4_800_000,   category:'Vision',    description:'Meta Llama 3.2 — instruction-tuned image reasoning in 11B and 90B.' },
+  { model_identifier:'qwen3-vl',             model_name:'Qwen 3 VL',              labels:['2b','4b','8b','30b','32b','235b'],   pulls:4_300_000,   category:'Vision',    description:'Most powerful vision-language model in the Qwen family.' },
+  { model_identifier:'qwen2.5vl',            model_name:'Qwen 2.5 VL',            labels:['3b','7b','32b','72b'],               pulls:2_800_000,   category:'Vision',    description:'Flagship vision-language model — significant leap from Qwen2-VL.' },
+  { model_identifier:'moondream',            model_name:'Moondream 2',            labels:['1.8b'],                               pulls:1_400_000,   category:'Vision',    description:'Small vision language model designed to run efficiently on edge devices.' },
+  { model_identifier:'minicpm-v',            model_name:'MiniCPM V',              labels:['8b'],                                 pulls:5_300_000,   category:'Vision',    description:'Series of multimodal LLMs for vision-language understanding.' },
+  { model_identifier:'glm-ocr',              model_name:'GLM OCR',                labels:['cloud'],                              pulls:6_000_000,   category:'Vision',    description:'Multimodal OCR model for complex document understanding.' },
+  { model_identifier:'llava-llama3',         model_name:'LLaVA Llama 3',          labels:['8b'],                                 pulls:2_300_000,   category:'Vision',    description:'LLaVA fine-tuned from Llama 3 Instruct — better scores on benchmarks.' },
+  { model_identifier:'granite3.2-vision',    model_name:'Granite 3.2 Vision',     labels:['2b'],                                 pulls:934_300,     category:'Vision',    description:'Compact vision-language model for visual document understanding.' },
+  { model_identifier:'deepseek-ocr',         model_name:'DeepSeek OCR',           labels:['3b'],                                 pulls:479_700,     category:'Vision',    description:'Vision-language model for token-efficient OCR.' },
+  { model_identifier:'bakllava',             model_name:'BakLLaVA',               labels:['7b'],                                 pulls:857_400,     category:'Vision',    description:'Multimodal model — Mistral 7B augmented with LLaVA architecture.' },
+  { model_identifier:'llava-phi3',           model_name:'LLaVA Phi 3',            labels:['3.8b'],                               pulls:291_400,     category:'Vision',    description:'Small LLaVA model fine-tuned from Phi 3 Mini.' },
+  { model_identifier:'medgemma',             model_name:'MedGemma',               labels:['4b','27b'],                           pulls:113_900,     category:'Vision',    description:'Gemma 3 variants trained for medical text and image comprehension.' },
+  { model_identifier:'mistral-medium-3.5',   model_name:'Mistral Medium 3.5',     labels:['128b'],                               pulls:126_500,     category:'Vision',    description:'Mistral flagship merging instruction, reasoning, coding in 128B weights.' },
+  // ── Embedding ────────────────────────────────────────────────────────
+  { model_identifier:'nomic-embed-text',     model_name:'Nomic Embed Text',       labels:['137m'],                               pulls:76_700_000,  category:'Embedding', description:'High-performing open embedding model with large token context window.' },
+  { model_identifier:'mxbai-embed-large',    model_name:'mxbai Embed Large',      labels:['335m'],                               pulls:12_100_000,  category:'Embedding', description:'State-of-the-art large embedding model from mixedbread.ai.' },
+  { model_identifier:'bge-m3',               model_name:'BGE-M3',                 labels:['567m'],                               pulls:4_900_000,   category:'Embedding', description:'Multi-functionality, multi-linguality, multi-granularity embedding.' },
+  { model_identifier:'all-minilm',           model_name:'All MiniLM',             labels:['22m','33m'],                          pulls:3_200_000,   category:'Embedding', description:'Embedding models on very large sentence level datasets.' },
+  { model_identifier:'snowflake-arctic-embed',model_name:'Snowflake Arctic Embed',labels:['22m','33m','110m','137m','335m'],     pulls:3_100_000,   category:'Embedding', description:'Suite of text embedding models by Snowflake, optimized for performance.' },
+  { model_identifier:'qwen3-embedding',      model_name:'Qwen 3 Embedding',       labels:['0.6b','4b','8b'],                    pulls:2_300_000,   category:'Embedding', description:'Comprehensive range of text embedding models from Qwen3 series.' },
+  { model_identifier:'bge-large',            model_name:'BGE Large',              labels:['335m'],                               pulls:271_900,     category:'Embedding', description:'Embedding model from BAAI mapping texts to vectors.' },
+  { model_identifier:'paraphrase-multilingual',model_name:'Paraphrase Multilingual',labels:['278m'],                            pulls:900_200,     category:'Embedding', description:'Sentence-transformers model for clustering or semantic search.' },
+  { model_identifier:'snowflake-arctic-embed2',model_name:'Snowflake Arctic Embed 2',labels:['568m'],                           pulls:414_700,     category:'Embedding', description:'Arctic Embed 2.0 — multilingual support without sacrificing English perf.' },
+  { model_identifier:'nomic-embed-text-v2-moe',model_name:'Nomic Embed Text v2 MoE',labels:['embedding'],                      pulls:424_300,     category:'Embedding', description:'Multilingual MoE text embedding model for multilingual retrieval.' },
+  { model_identifier:'embeddinggemma',       model_name:'Embedding Gemma',        labels:['300m'],                               pulls:1_300_000,   category:'Embedding', description:'300M parameter embedding model from Google.' },
+  { model_identifier:'granite-embedding',    model_name:'Granite Embedding',      labels:['30m','278m'],                         pulls:335_300,     category:'Embedding', description:'IBM Granite dense biencoder embedding — 30M English, 278M multilingual.' },
+  // ── Compact / Edge ────────────────────────────────────────────────────
+  { model_identifier:'tinyllama',            model_name:'TinyLlama',              labels:['1.1b'],                               pulls:5_200_000,   category:'Compact',   description:'1.1B Llama model trained on 3 trillion tokens — runs anywhere.' },
+  { model_identifier:'smollm2',              model_name:'SmolLM 2',               labels:['135m','360m','1.7b'],                 pulls:3_400_000,   category:'Compact',   description:'Family of compact language models — 135M, 360M, and 1.7B parameters.' },
+  { model_identifier:'smollm',              model_name:'SmolLM',                  labels:['135m','360m','1.7b'],                 pulls:1_900_000,   category:'Compact',   description:'Small models with 135M, 360M, 1.7B — trained on high-quality dataset.' },
+  { model_identifier:'gemma3n',              model_name:'Gemma 3n',               labels:['e2b','e4b'],                          pulls:1_800_000,   category:'Compact',   description:'Designed for efficient execution on laptops, tablets or phones.' },
+  { model_identifier:'phi',                  model_name:'Phi 2',                  labels:['2.7b'],                               pulls:1_500_000,   category:'Compact',   description:'Microsoft Phi-2 — 2.7B with outstanding reasoning and language understanding.' },
+  { model_identifier:'dolphin-phi',          model_name:'Dolphin Phi',            labels:['2.7b'],                               pulls:1_600_000,   category:'Compact',   description:'2.7B uncensored Dolphin based on Microsoft\'s Phi model.' },
+  { model_identifier:'stablelm2',            model_name:'StableLM 2',             labels:['1.6b','12b'],                         pulls:985_800,     category:'Compact',   description:'1.6B and 12B multilingual model in English, Spanish, German, and more.' },
+  { model_identifier:'tinydolphin',          model_name:'TinyDolphin',            labels:['1.1b'],                               pulls:699_200,     category:'Compact',   description:'Experimental 1.1B model trained on Dolphin 2.8 dataset + TinyLlama.' },
+  { model_identifier:'stablelm-zephyr',      model_name:'StableLM Zephyr',        labels:['3b'],                                 pulls:512_700,     category:'Compact',   description:'Lightweight 3B chat model — accurate and responsive without high-end hardware.' },
+  // ── Uncensored ────────────────────────────────────────────────────────
+  { model_identifier:'llama2-uncensored',    model_name:'Llama 2 Uncensored',     labels:['7b','70b'],                           pulls:2_600_000,   category:'Uncensored','description':'Uncensored Llama 2 model by George Sung and Jarrad Hope.' },
+  { model_identifier:'dolphin-mixtral',      model_name:'Dolphin Mixtral',        labels:['8x7b','8x22b'],                       pulls:1_800_000,   category:'Uncensored', description:'Uncensored Mixtral fine-tunes by Eric Hartford — excels at coding.' },
+  { model_identifier:'dolphin-llama3',       model_name:'Dolphin Llama 3',        labels:['8b','70b'],                           pulls:2_000_000,   category:'Uncensored', description:'Dolphin 2.9 based on Llama 3 — instruct, conversational, and coding.' },
+  { model_identifier:'wizard-vicuna-uncensored',model_name:'Wizard Vicuna Uncensored',labels:['7b','13b','30b'],                 pulls:1_200_000,   category:'Uncensored', description:'Uncensored Wizard Vicuna based on Llama 2 by Eric Hartford.' },
+  { model_identifier:'wizardlm-uncensored',  model_name:'WizardLM Uncensored',    labels:['13b'],                                pulls:620_800,     category:'Uncensored', description:'Uncensored version of WizardLM model.' },
+  // ── Older / Specialized ───────────────────────────────────────────────
+  { model_identifier:'qwen',                 model_name:'Qwen 1.5',               labels:['0.5b','1.8b','4b','7b','14b','32b','72b','110b'], pulls:7_100_000, category:'General', description:'Qwen 1.5 series by Alibaba Cloud — 0.5B to 110B parameters.' },
+  { model_identifier:'qwen2',                model_name:'Qwen 2',                 labels:['0.5b','1.5b','7b','72b'],             pulls:6_000_000,   category:'General',   description:'New series of large language models from Alibaba group.' },
+  { model_identifier:'mixtral',              model_name:'Mixtral',                labels:['8x7b','8x22b'],                       pulls:2_700_000,   category:'General',   description:'Mixture of Experts model by Mistral AI in 8x7B and 8x22B sizes.' },
+  { model_identifier:'llava-llama3',         model_name:'LLaVA Llama3',           labels:['8b'],                                 pulls:2_300_000,   category:'Vision',    description:'LLaVA fine-tuned from Llama 3 Instruct with better benchmark scores.' },
+  { model_identifier:'orca-mini',            model_name:'Orca Mini',              labels:['3b','7b','13b','70b'],                pulls:2_900_000,   category:'General',   description:'General-purpose model 3B to 70B, suitable for entry-level hardware.' },
+  { model_identifier:'zephyr',               model_name:'Zephyr',                 labels:['7b','141b'],                          pulls:1_200_000,   category:'General',   description:'Fine-tuned Mistral/Mixtral models trained to act as helpful assistants.' },
+  { model_identifier:'granite3.3',           model_name:'Granite 3.3',            labels:['2b','8b'],                            pulls:1_000_000,   category:'Coding',    description:'IBM Granite 128K context models fine-tuned for reasoning.' },
+  { model_identifier:'granite3.1-dense',     model_name:'Granite 3.1 Dense',      labels:['2b','8b'],                            pulls:975_800,     category:'Coding',    description:'IBM Granite dense LLMs trained on 12T+ tokens.' },
+  { model_identifier:'granite3-dense',       model_name:'Granite 3 Dense',        labels:['2b','8b'],                            pulls:978_300,     category:'Coding',    description:'IBM Granite 2B and 8B — tool use and RAG support.' },
+  { model_identifier:'granite3.2',           model_name:'Granite 3.2',            labels:['2b','8b'],                            pulls:439_600,     category:'Coding',    description:'IBM Granite 3.2 — fine-tuned for thinking capabilities.' },
+  { model_identifier:'granite3.1-moe',       model_name:'Granite 3.1 MoE',        labels:['1b','3b'],                            pulls:3_000_000,   category:'Coding',    description:'IBM Granite 1B and 3B long-context MoE models for low latency usage.' },
+  { model_identifier:'granite3-moe',         model_name:'Granite 3 MoE',          labels:['1b','3b'],                            pulls:912_800,     category:'Coding',    description:'IBM Granite first MoE models designed for low latency usage.' },
+  { model_identifier:'llama4',               model_name:'Llama 4',                labels:['16x17b','128x17b'],                   pulls:1_700_000,   category:'Vision',    description:'Meta\'s latest collection of multimodal models.' },
+  { model_identifier:'nemotron-mini',        model_name:'Nemotron Mini',          labels:['4b'],                                 pulls:680_700,     category:'General',   description:'NVIDIA small language model for roleplay, RAG QA, function calling.' },
+  { model_identifier:'solar',                model_name:'Solar',                  labels:['10.7b'],                              pulls:926_800,     category:'General',   description:'Compact 10.7B model designed for single-turn conversation.' },
+  { model_identifier:'internlm2',            model_name:'InternLM 2.5',           labels:['1m','1.8b','7b','20b'],               pulls:948_400,     category:'General',   description:'7B model tailored for practical scenarios with outstanding reasoning.' },
+  { model_identifier:'qwen2-math',           model_name:'Qwen 2 Math',            labels:['1.5b','7b','72b'],                    pulls:1_000_000,   category:'Reasoning', description:'Specialized math language models — outperforms GPT-4o on math.' },
+  { model_identifier:'wizard-math',          model_name:'Wizard Math',            labels:['7b','13b','70b'],                     pulls:960_500,     category:'Reasoning', description:'Model focused on math and logic problems.' },
+  { model_identifier:'meditron',             model_name:'Meditron',               labels:['7b','70b'],                           pulls:735_000,     category:'General',   description:'Open-source medical LLM adapted from Llama 2 to the medical domain.' },
+  { model_identifier:'medllama2',            model_name:'MedLlama 2',             labels:['7b'],                                 pulls:577_600,     category:'General',   description:'Fine-tuned Llama 2 for medical questions based on open medical dataset.' },
+  { model_identifier:'reader-lm',            model_name:'Reader LM',              labels:['0.5b','1.5b'],                        pulls:886_600,     category:'General',   description:'Models that convert HTML content to Markdown — useful for content conversion.' },
+  { model_identifier:'nuextract',            model_name:'NuExtract',              labels:['3.8b'],                               pulls:511_600,     category:'General',   description:'3.8B model fine-tuned on synthetic dataset for information extraction.' },
+  { model_identifier:'glm4',                 model_name:'GLM 4',                  labels:['9b'],                                 pulls:1_100_000,   category:'General',   description:'Strong multi-lingual general language model competitive with Llama 3.' },
+  { model_identifier:'glm-5',                model_name:'GLM 5',                  labels:['cloud'],                              pulls:2_300_000,   category:'Reasoning', description:'Strong reasoning and agentic model — 744B total, 40B active parameters.' },
+  { model_identifier:'glm-5.1',              model_name:'GLM 5.1',                labels:['cloud'],                              pulls:2_300_000,   category:'Coding',    description:'Next-gen flagship for agentic engineering — stronger coding, SWE-Bench Pro.' },
+  { model_identifier:'glm-5.2',              model_name:'GLM 5.2',                labels:['cloud'],                              pulls:133_500,     category:'Reasoning', description:'Z.ai\'s flagship model for the era of long-horizon tasks.' },
+  { model_identifier:'glm-4.7',              model_name:'GLM 4.7',                labels:['cloud'],                              pulls:2_200_000,   category:'Coding',    description:'Advancing the Coding Capability from Z.ai.' },
+  { model_identifier:'llama3-gradient',      model_name:'Llama 3 Gradient',       labels:['8b','70b'],                           pulls:956_500,     category:'General',   description:'Extends Llama 3 8B context from 8K to over 1M tokens.' },
+  { model_identifier:'command-r-plus',       model_name:'Command R+',             labels:['104b'],                               pulls:772_300,     category:'General',   description:'Cohere Command R+ — powerful, scalable for enterprise use cases.' },
+  { model_identifier:'exaone3.5',            model_name:'EXAONE 3.5',             labels:['2.4b','7.8b','32b'],                  pulls:515_500,     category:'General',   description:'Bilingual (English + Korean) generative models by LG AI Research.' },
+  { model_identifier:'olmo-3',               model_name:'OLMo 3',                 labels:['7b','32b'],                           pulls:438_600,     category:'General',   description:'Open language models designed to enable the science of language models.' },
+  { model_identifier:'yi',                   model_name:'Yi 1.5',                 labels:['6b','9b','34b'],                      pulls:1_300_000,   category:'General',   description:'High-performing bilingual language model.' },
+  { model_identifier:'openchat',             model_name:'OpenChat 3.5',           labels:['7b'],                                 pulls:1_100_000,   category:'General',   description:'Open-source models trained on wide variety of data, surpassing ChatGPT.' },
+  { model_identifier:'falcon',               model_name:'Falcon',                 labels:['7b','40b','180b'],                    pulls:1_100_000,   category:'General',   description:'TII Falcon — built for summarization, text generation, and chatbots.' },
+  { model_identifier:'dolphin-mistral',      model_name:'Dolphin Mistral',        labels:['7b'],                                 pulls:1_500_000,   category:'General',   description:'Uncensored Dolphin based on Mistral — excels at coding. v2.8.' },
+  { model_identifier:'lfm2',                 model_name:'LFM 2',                  labels:['24b'],                                pulls:1_100_000,   category:'General',   description:'Hybrid models for on-device deployment — 24B with 2B active.' },
+  { model_identifier:'lfm2.5',               model_name:'LFM 2.5',                labels:['8b'],                                 pulls:40_400,      category:'General',   description:'Edge model for fast, reliable tool calling on consumer hardware.' },
+  { model_identifier:'lfm2.5-thinking',      model_name:'LFM 2.5 Thinking',       labels:['1.2b'],                               pulls:1_200_000,   category:'Reasoning', description:'LFM2.5 hybrid models designed for on-device deployment.' },
+  { model_identifier:'tulu3',                model_name:'Tülu 3',                 labels:['8b','70b'],                           pulls:367_500,     category:'General',   description:'Leading instruction following model family from Allen Institute for AI.' },
+  { model_identifier:'sailor2',              model_name:'Sailor 2',               labels:['1b','8b','20b'],                      pulls:394_400,     category:'General',   description:'Multilingual models made for South-East Asia in 1B, 8B, 20B.' },
+  { model_identifier:'minimax-m2.5',         model_name:'MiniMax M2.5',           labels:['cloud'],                              pulls:2_300_000,   category:'General',   description:'State-of-the-art LLM designed for productivity and coding tasks.' },
+  { model_identifier:'minimax-m2.7',         model_name:'MiniMax M2.7',           labels:['cloud'],                              pulls:2_300_000,   category:'General',   description:'MiniMax M2-series for coding, agentic workflows, professional productivity.' },
+  { model_identifier:'kimi-k2.5',            model_name:'Kimi K2.5',              labels:['cloud'],                              pulls:341_200,     category:'Vision',    description:'Open-source multimodal agentic model — vision, instant and thinking modes.' },
+  { model_identifier:'kimi-k2.6',            model_name:'Kimi K2.6',              labels:['cloud'],                              pulls:346_800,     category:'Vision',    description:'Open-source native multimodal agentic model — long-horizon coding.' },
+  { model_identifier:'nemotron-3-super',     model_name:'Nemotron 3 Super',       labels:['120b'],                               pulls:2_600_000,   category:'Reasoning', description:'NVIDIA 120B open MoE model — 12B active, for multi-agent applications.' },
+  { model_identifier:'nemotron',             model_name:'Nemotron 70B',           labels:['70b'],                                pulls:589_000,     category:'General',   description:'Llama-3.1-Nemotron-70B customized by NVIDIA for helpful responses.' },
+];
+
+let allLibraryModels = BUNDLED_MODELS;
+let localModelNames  = new Set();
+let activeCategory   = 'All';
+
+const $overlay       = document.getElementById('model-modal-overlay');
+const $modalList     = document.getElementById('modal-list');
+const $modalStatus   = document.getElementById('modal-status');
+const $modalSearch   = document.getElementById('modal-search');
+const $modalClose    = document.getElementById('modal-close-btn');
+const $modalTabs     = document.getElementById('modal-tabs');
+const $customInput   = document.getElementById('modal-custom-input');
+const $pullCustomBtn = document.getElementById('modal-pull-custom');
+
+// Build category tabs once
+const CATEGORIES = ['All', 'General', 'Reasoning', 'Coding', 'Vision', 'Embedding', 'Compact', 'Uncensored'];
+CATEGORIES.forEach(cat => {
+  const btn = document.createElement('button');
+  btn.className = 'modal-tab' + (cat === 'All' ? ' active' : '');
+  btn.textContent = cat;
+  btn.dataset.cat = cat;
+  btn.addEventListener('click', () => {
+    activeCategory = cat;
+    $modalSearch.value = '';
+    document.querySelectorAll('.modal-tab').forEach(b => b.classList.toggle('active', b.dataset.cat === cat));
+    renderModelList('');
+  });
+  $modalTabs.appendChild(btn);
+});
+
+function openModelModal() {
+  $overlay.classList.add('open');
+  $modalSearch.value = '';
+  $modalSearch.focus();
+  localModelNames = new Set(
+    Array.from($modelSelect.options).map(o => o.value.split(':')[0])
+  );
+  renderModelList('');
+}
+
+function closeModelModal() {
+  $overlay.classList.remove('open');
+}
+
+function formatPulls(n) {
+  if (!n) return '';
+  if (n >= 1_000_000) return `${(n/1_000_000).toFixed(1)}M pulls`;
+  if (n >= 1_000)     return `${(n/1_000).toFixed(0)}K pulls`;
+  return `${n} pulls`;
+}
+
+function renderModelList(query) {
+  const q = query.toLowerCase().trim();
+
+  let filtered = activeCategory === 'All'
+    ? allLibraryModels
+    : allLibraryModels.filter(m => m.category === activeCategory);
+
+  if (q) {
+    filtered = filtered.filter(m =>
+      m.model_name?.toLowerCase().includes(q) ||
+      m.model_identifier?.toLowerCase().includes(q) ||
+      m.description?.toLowerCase().includes(q)
+    );
+  }
+
+  const total = activeCategory === 'All' ? allLibraryModels.length : allLibraryModels.filter(m => m.category === activeCategory).length;
+  $modalStatus.textContent = q
+    ? `${filtered.length} result${filtered.length !== 1 ? 's' : ''} for "${query}"`
+    : `${filtered.length} model${filtered.length !== 1 ? 's' : ''} · click to pull`;
+
+  if (filtered.length === 0) {
+    $modalList.innerHTML = '<div class="modal-empty">No models match your search.</div>';
+    return;
+  }
+
+  $modalList.innerHTML = '';
+  for (const m of filtered) {
+    const isInstalled = localModelNames.has(m.model_identifier);
+    const sizes = (m.labels || []).join('  ');
+    const card = document.createElement('div');
+    card.className = 'model-card' + (isInstalled ? ' already-have' : '');
+    card.dataset.modelId = m.model_identifier;
+    card.innerHTML = `
+      <div class="model-card-info">
+        <div class="model-card-name">
+          ${escHtml(m.model_name || m.model_identifier)}
+          ${isInstalled ? '<span class="model-badge installed">installed</span>' : ''}
+          ${m.category && activeCategory === 'All' ? `<span class="model-badge cat-${escHtml(m.category.toLowerCase())}">${escHtml(m.category)}</span>` : ''}
+        </div>
+        <div class="model-card-sizes">${(m.labels || []).map(l => `<span class="size-pill">${escHtml(l)}</span>`).join('')}</div>
+        <div class="model-card-desc">${escHtml(m.description || '')}</div>
+      </div>
+      <div class="model-card-meta">${escHtml(formatPulls(m.pulls))}</div>
+    `;
+    if (!isInstalled) {
+      card.addEventListener('click', () => openSizePicker(m, card));
+    }
+    $modalList.appendChild(card);
+  }
+}
+
+// ── Size picker ───────────────────────────────────────────────────────────────
+
+let _sizePickerCard = null;
+
+function openSizePicker(model, cardEl) {
+  // Remove any existing picker
+  document.getElementById('size-picker')?.remove();
+
+  _sizePickerCard = cardEl;
+
+  const labels = model.labels || [];
+
+  // If there's only one size (or none), pull immediately with default tag
+  if (labels.length <= 1) {
+    const tag = labels.length === 1 ? `${model.model_identifier}:${labels[0]}` : model.model_identifier;
+    startPullOnCard(model.model_identifier, tag, cardEl);
+    return;
+  }
+
+  const picker = document.createElement('div');
+  picker.id = 'size-picker';
+  picker.innerHTML = `
+    <div class="sp-arrow"></div>
+    <div class="sp-title">Choose a size to pull</div>
+    <div class="sp-hint">Larger = smarter but needs more RAM/VRAM</div>
+    <div class="sp-sizes">
+      ${labels.map(l => `<button class="sp-btn" data-tag="${escHtml(model.model_identifier)}:${escHtml(l)}">${escHtml(l)}</button>`).join('')}
+      <button class="sp-btn sp-default" data-tag="${escHtml(model.model_identifier)}">default</button>
+    </div>
+  `;
+
+  // Position below the card
+  cardEl.style.position = 'relative';
+  cardEl.appendChild(picker);
+
+  picker.querySelectorAll('.sp-btn').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const tag = btn.dataset.tag;
+      picker.remove();
+      startPullOnCard(model.model_identifier, tag, cardEl);
+    });
+  });
+
+  // Close picker if clicking outside
+  setTimeout(() => {
+    document.addEventListener('click', closeSizePickerOnOutside, { once: true });
+  }, 0);
+}
+
+function closeSizePickerOnOutside(e) {
+  const picker = document.getElementById('size-picker');
+  if (picker && !picker.contains(e.target)) {
+    picker.remove();
+  }
+}
+
+async function startPullOnCard(modelId, fullTag, cardEl) {
+  cardEl.style.position = '';
+  cardEl.classList.add('pulling');
+  const metaEl = cardEl.querySelector('.model-card-meta');
+  metaEl.innerHTML = `<div class="pull-progress"><div class="pull-spinner"></div>${escHtml(fullTag.includes(':') ? fullTag.split(':')[1] : 'default')}</div>`;
+
+  try {
+    await doPull(fullTag);
+    cardEl.classList.remove('pulling');
+    cardEl.classList.add('already-have');
+    const nameEl = cardEl.querySelector('.model-card-name');
+    if (!nameEl.querySelector('.model-badge.installed')) {
+      nameEl.insertAdjacentHTML('beforeend', '<span class="model-badge installed">installed</span>');
+    }
+    metaEl.textContent = '';
+    localModelNames.add(modelId);
+  } catch {
+    cardEl.classList.remove('pulling');
+    metaEl.textContent = formatPulls(0);
+  }
+}
+
+async function doPull(modelName) {
+  showToast(`Pulling ${modelName}…`);
   try {
     const res = await fetch(`${OLLAMA_BASE}/api/pull`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: model.trim() }),
+      body: JSON.stringify({ name: modelName, stream: false }),
     });
-    if (res.ok) {
-      await new Promise(r => setTimeout(r, 2000));
-      await loadModels();
-      showToast(`✅ ${model.trim()} ready`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    // Drain the response (streaming pull — wait for it to finish)
+    const reader = res.body.getReader();
+    while (true) {
+      const { done } = await reader.read();
+      if (done) break;
     }
+    await loadModels();
+    showToast(`✅ ${modelName} ready — select it in the dropdown`);
   } catch (e) {
     showToast(`❌ Pull failed: ${e.message}`);
+    throw e;
   }
 }
+
+// Wire modal events
+$pullModelBtn.addEventListener('click', openModelModal);
+$modalClose.addEventListener('click', closeModelModal);
+$overlay.addEventListener('click', e => { if (e.target === $overlay) closeModelModal(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModelModal(); });
+
+$modalSearch.addEventListener('input', () => {
+  const q = $modalSearch.value;
+  if (q) {
+    // While searching, show all categories (don't filter by tab)
+    activeCategory = 'All';
+    document.querySelectorAll('.modal-tab').forEach(b => b.classList.toggle('active', b.dataset.cat === 'All'));
+  }
+  renderModelList(q);
+});
+
+$pullCustomBtn.addEventListener('click', async () => {
+  const name = $customInput.value.trim();
+  if (!name) return;
+  $pullCustomBtn.disabled = true;
+  $pullCustomBtn.textContent = 'Pulling…';
+  try {
+    await doPull(name);
+    $customInput.value = '';
+  } catch {}
+  $pullCustomBtn.disabled = false;
+  $pullCustomBtn.textContent = 'Pull';
+});
+
+$customInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter') $pullCustomBtn.click();
+});
 
 function setStatus(state, label) {
   $statusDot.className   = `status-dot ${state}`;
@@ -1120,28 +2121,52 @@ function addAssistantPlaceholder() {
   return msg;
 }
 
-function finaliseAssistant(msgEl, fullText, stats) {
+function finaliseAssistant(msgEl, fullContent, fullThinking, stats) {
   const body = msgEl.querySelector('.message-body');
   body.classList.remove('stream-cursor');
+  body.textContent = '';
 
-  const { thinking, content } = parseThinking(fullText);
+  // thinking may be in fullThinking (native API) or embedded in fullContent (<think> tags)
+  let thinkingText = fullThinking || null;
+  let answerText   = fullContent;
 
-  let html = '';
-  if (thinking) {
-    html += `
-      <div class="thinking-block">
-        <div class="thinking-label">💭 Thinking</div>
-        <div>${escHtml(thinking)}</div>
-      </div>`;
-  }
-  html += renderMarkdown(content);
-  body.innerHTML = html;
-
-  // Append stats card
-  if (stats) {
-    msgEl.appendChild(buildStatsCard(stats));
+  if (!thinkingText && fullContent.includes('<think>')) {
+    const parsed = parseThinking(fullContent);
+    thinkingText = parsed.thinking;
+    answerText   = parsed.content;
   }
 
+  console.log(`[DEBUG] finalise: thinkLen=${thinkingText?.length||0} answerLen=${answerText?.length||0} answer="${answerText?.substring(0,100)}"`);
+
+  // ── Thinking block ────────────────────────────────────────────────────
+  if (thinkingText) {
+    const tokenEstimate = Math.round(thinkingText.length / 4);
+    const block = document.createElement('div');
+    block.className = 'thinking-block';
+    const toggle = document.createElement('button');
+    toggle.className = 'thinking-toggle';
+    toggle.innerHTML = `💭 Thinking <span class="thinking-token-count">(~${tokenEstimate} tokens)</span><span class="thinking-chevron">▾</span>`;
+    toggle.addEventListener('click', () => block.classList.toggle('open'));
+    const thinkContent = document.createElement('div');
+    thinkContent.className = 'thinking-content';
+    thinkContent.textContent = thinkingText;
+    block.appendChild(toggle);
+    block.appendChild(thinkContent);
+    body.appendChild(block);
+  }
+
+  // ── Answer ────────────────────────────────────────────────────────────
+  const answerEl = document.createElement('div');
+  if (answerText && answerText.trim()) {
+    try { answerEl.innerHTML = renderMarkdown(answerText); }
+    catch (e) { answerEl.textContent = answerText; }
+  } else {
+    answerEl.style.cssText = 'color:var(--text-dim);font-size:12px;font-style:italic';
+    answerEl.textContent = '(No answer — model used all tokens thinking. Increase Max Tokens or use Budget/No Think mode.)';
+  }
+  body.appendChild(answerEl);
+
+  if (stats) msgEl.appendChild(buildStatsCard(stats));
   scrollToBottom();
 }
 
@@ -1271,10 +2296,19 @@ async function sendMessage(userText) {
   if (sys) apiMessages.push({ role: 'system', content: sys });
   apiMessages.push(...messages);
 
+  // think parameter per official Ollama API docs:
+  // think: true  = full thinking (boolean)
+  // think: false = no thinking (boolean)
+  // think: "low" | "medium" | "high" | "max" = budget levels
+  const thinkValue = params.think_mode === 'off'    ? false
+                   : params.think_mode === 'budget' ? params.think_level
+                   : true;
+
   const body = {
     model,
     messages: apiMessages,
     stream:   true,
+    think:    thinkValue,
     options: {
       temperature:    params.temperature,
       top_p:          params.top_p,
@@ -1318,7 +2352,13 @@ async function sendMessage(userText) {
     const reader  = res.body.getReader();
     const decoder = new TextDecoder();
     let fullContent = '';
+    let fullThinking = '';
     let finalChunk  = null;
+    let chunkCount  = 0;
+    let thinkChunks = 0;
+    let contentChunks = 0;
+
+    console.log('[DEBUG] Stream started');
 
     while (true) {
       const { done, value } = await reader.read();
@@ -1330,22 +2370,60 @@ async function sendMessage(userText) {
         let chunk;
         try { chunk = JSON.parse(line); } catch { continue; }
 
-        if (chunk.message?.content) {
-          if (firstTokenTime === null) {
-            firstTokenTime = performance.now();
-          }
-          fullContent += chunk.message.content;
+        chunkCount++;
 
-          // Live streaming render — raw text while streaming
-          streamBody.textContent = fullContent;
+        // Log first 3 chunks fully so we can see the structure
+        if (chunkCount <= 3) {
+          console.log(`[DEBUG] chunk #${chunkCount}:`, JSON.stringify(chunk));
+        }
+
+        if (firstTokenTime === null && (chunk.message?.content || chunk.message?.thinking)) {
+          firstTokenTime = performance.now();
+        }
+
+        // Ollama 0.24 + qwen3.5: thinking tokens come in message.thinking,
+        // answer tokens come in message.content (after thinking is done)
+        if (chunk.message?.thinking) {
+          thinkChunks++;
+          fullThinking += chunk.message.thinking;
+          const toks = Math.round(fullThinking.length / 4);
+          streamBody.textContent = `💭 Thinking… (~${toks} tokens)`;
+          scrollToBottom();
+        }
+
+        if (chunk.message?.content) {
+          contentChunks++;
+          if (contentChunks <= 3) {
+            console.log(`[DEBUG] content chunk #${contentChunks}:`, JSON.stringify(chunk.message.content));
+          }
+          // content may also contain <think> tags if Ollama changes behavior
+          fullContent += chunk.message.content;
+          const hasOpen  = fullContent.includes('<think>');
+          const hasClose = fullContent.includes('</think>');
+          if (hasOpen && !hasClose) {
+            const thinkSoFar = fullContent.split('<think>')[1] || '';
+            const toks = Math.round(thinkSoFar.length / 4);
+            streamBody.textContent = `💭 Thinking… (~${toks} tokens)`;
+          } else if (hasOpen && hasClose) {
+            streamBody.textContent = fullContent.split('</think>').slice(1).join('</think>').trimStart();
+          } else {
+            streamBody.textContent = fullContent;
+          }
           scrollToBottom();
         }
 
         if (chunk.done) {
           finalChunk = chunk;
+          console.log('[DEBUG] done chunk:', JSON.stringify(chunk));
         }
       }
     }
+
+    console.log(`[DEBUG] Stream complete. Total chunks: ${chunkCount}, think chunks: ${thinkChunks}, content chunks: ${contentChunks}`);
+    console.log(`[DEBUG] fullThinking length: ${fullThinking.length}, fullContent length: ${fullContent.length}`);
+    console.log(`[DEBUG] fullContent value: "${fullContent.substring(0, 200)}"`);
+    console.log(`[DEBUG] fullThinking first 200: "${fullThinking.substring(0, 200)}"`);
+
 
     // Compute stats
     const endTime = performance.now();
@@ -1383,7 +2461,7 @@ async function sendMessage(userText) {
     // Push assistant reply to history
     messages.push({ role: 'assistant', content: fullContent });
 
-    finaliseAssistant(msgEl, fullContent, stats);
+    finaliseAssistant(msgEl, fullContent, fullThinking, stats);
 
   } catch (err) {
     removeTypingIndicator();
@@ -1488,7 +2566,6 @@ $userInput.addEventListener('input', autoResizeTextarea);
 
 $newChatBtn.addEventListener('click', newChat);
 $resetBtn.addEventListener('click', resetParams);
-$pullModelBtn.addEventListener('click', pullModel);
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  Init
