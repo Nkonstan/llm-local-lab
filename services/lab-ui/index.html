@@ -1106,9 +1106,30 @@ input[type="range"]::-moz-range-thumb {
   font-size: 11px;
   color: var(--accent);
   display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
+  min-width: 90px;
+}
+.pull-progress-row {
+  display: flex;
   align-items: center;
   gap: 6px;
-  flex-shrink: 0;
+}
+.pull-bar-track {
+  width: 90px;
+  height: 3px;
+  background: rgba(139,114,248,.2);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.pull-bar-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 2px;
+  width: 0%;
+  transition: width 0.3s ease;
 }
 .pull-spinner {
   width: 12px; height: 12px;
@@ -1229,7 +1250,7 @@ input[type="range"]::-moz-range-thumb {
           <div class="param-row">
             <span class="param-label">Max Tokens</span>
           </div>
-          <input type="number" class="param-number" id="max_tokens" min="64" max="32768" step="64" value="2048">
+          <input type="number" class="param-number" id="max_tokens" min="64" max="131072" step="64" value="65536">
           <div class="param-hint">Maximum tokens to generate. -1 = unlimited.</div>
         </div>
 
@@ -1238,7 +1259,7 @@ input[type="range"]::-moz-range-thumb {
           <div class="param-row">
             <span class="param-label">Context Window</span>
           </div>
-          <input type="number" class="param-number" id="num_ctx" min="512" max="131072" step="512" value="4096">
+          <input type="number" class="param-number" id="num_ctx" min="512" max="131072" step="512" value="65536">
           <div class="param-hint">Total tokens in context (prompt + reply).</div>
         </div>
 
@@ -1248,7 +1269,7 @@ input[type="range"]::-moz-range-thumb {
             <span class="param-label">Thinking Mode</span>
           </div>
           <div class="think-mode-row">
-            <button class="think-mode-btn active-think" id="think-btn-on"    data-mode="on">💭 Think</button>
+            <button class="think-mode-btn" id="think-btn-on" data-mode="on">💭 Think</button>
             <button class="think-mode-btn"              id="think-btn-budget" data-mode="budget">⏱ Budget</button>
             <button class="think-mode-btn"              id="think-btn-off"   data-mode="off">⚡ No Think</button>
           </div>
@@ -1374,11 +1395,10 @@ const DEFAULT_PARAMS = {
   top_p:          0.9,
   top_k:          40,
   repeat_penalty: 1.1,
-  max_tokens:     12288,
-  num_ctx:        12288,
+  max_tokens:     65536,
+  num_ctx:        65536,
   seed:           -1,
   think_mode:     'budget', // 'on' | 'budget' | 'off'
-  think_budget:   2000,
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1490,8 +1510,14 @@ function resetParams() {
   document.getElementById('max_tokens').value     = DEFAULT_PARAMS.max_tokens;
   document.getElementById('num_ctx').value        = DEFAULT_PARAMS.num_ctx;
   document.getElementById('seed').value           = DEFAULT_PARAMS.seed;
-  document.getElementById('think-budget').value   = DEFAULT_PARAMS.think_budget;
   setThinkMode(DEFAULT_PARAMS.think_mode);
+  // Reset think level buttons back to Low
+  document.querySelectorAll('.think-level-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector('.think-level-btn[data-level="low"]').classList.add('active');
+  // Manually fire input event on each slider so the displayed value updates too
+  ['temperature','top_p','top_k','repeat_penalty'].forEach(id => {
+    document.getElementById(id).dispatchEvent(new Event('input'));
+  });
   updateParamDisplays();
   showToast('Parameters reset to defaults');
 }
@@ -1924,10 +1950,29 @@ async function startPullOnCard(modelId, fullTag, cardEl) {
   cardEl.style.position = '';
   cardEl.classList.add('pulling');
   const metaEl = cardEl.querySelector('.model-card-meta');
-  metaEl.innerHTML = `<div class="pull-progress"><div class="pull-spinner"></div>${escHtml(fullTag.includes(':') ? fullTag.split(':')[1] : 'default')}</div>`;
+
+  // Build progress UI
+  metaEl.innerHTML = `
+    <div class="pull-progress">
+      <div class="pull-progress-row">
+        <div class="pull-spinner"></div>
+        <span class="pull-status-text">Starting…</span>
+      </div>
+      <div class="pull-bar-track">
+        <div class="pull-bar-fill" id="pull-bar-${escHtml(modelId)}"></div>
+      </div>
+    </div>`;
+
+  const barEl    = document.getElementById(`pull-bar-${modelId}`);
+  const labelEl  = metaEl.querySelector('.pull-status-text');
+
+  function onProgress(status, pct) {
+    if (barEl)   barEl.style.width = pct + '%';
+    if (labelEl) labelEl.textContent = pct < 100 ? `${status} ${pct}%` : status;
+  }
 
   try {
-    await doPull(fullTag);
+    await doPull(fullTag, onProgress);
     cardEl.classList.remove('pulling');
     cardEl.classList.add('already-have');
     const nameEl = cardEl.querySelector('.model-card-name');
@@ -1942,21 +1987,37 @@ async function startPullOnCard(modelId, fullTag, cardEl) {
   }
 }
 
-async function doPull(modelName) {
+async function doPull(modelName, onProgress) {
   showToast(`Pulling ${modelName}…`);
   try {
     const res = await fetch(`${OLLAMA_BASE}/api/pull`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: modelName, stream: false }),
+      body: JSON.stringify({ name: modelName, stream: true }),
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    // Drain the response (streaming pull — wait for it to finish)
-    const reader = res.body.getReader();
+
+    const reader  = res.body.getReader();
+    const decoder = new TextDecoder();
+
     while (true) {
-      const { done } = await reader.read();
+      const { done, value } = await reader.read();
       if (done) break;
+
+      const lines = decoder.decode(value, { stream: true }).split('\n').filter(Boolean);
+      for (const line of lines) {
+        let chunk;
+        try { chunk = JSON.parse(line); } catch { continue; }
+
+        if (onProgress && chunk.total && chunk.completed) {
+          const pct = Math.round((chunk.completed / chunk.total) * 100);
+          onProgress(chunk.status || 'downloading', pct);
+        } else if (onProgress && chunk.status) {
+          onProgress(chunk.status, 100);
+        }
+      }
     }
+
     await loadModels();
     showToast(`✅ ${modelName} ready — select it in the dropdown`);
   } catch (e) {

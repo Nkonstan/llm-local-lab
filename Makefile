@@ -27,6 +27,8 @@ gpu: _env_check                         ## 🚀  GPU + Lab UI  (default)
 	$(COMPOSE_GPU) $(COMPOSE_LAB) up -d --build --remove-orphans
 	@echo "✅  Lab UI  → http://localhost:$$(grep '^LAB_PORT' .env | cut -d= -f2)"
 	@echo "   Ollama   → http://localhost:11434"
+	@echo "   If models are missing: make logs-init"
+
 
 .PHONY: gpu-webui
 gpu-webui: _env_check                   ## 🚀  GPU + Open WebUI
@@ -48,6 +50,8 @@ cpu: _env_check                         ## 🖥️   CPU + Lab UI
 	@echo "🖥️  Starting with CPU + Lab UI..."
 	$(COMPOSE_CPU) $(COMPOSE_LAB) up -d --build --remove-orphans
 	@echo "✅  Lab UI  → http://localhost:$$(grep '^LAB_PORT' .env | cut -d= -f2)"
+	@echo "   If models are missing: make logs-init"
+
 
 .PHONY: cpu-webui
 cpu-webui: _env_check                   ## 🖥️   CPU + Open WebUI
@@ -104,6 +108,10 @@ logs-ollama:                            ## 📜  Follow Ollama logs only
 .PHONY: logs-ui
 logs-ui:                                ## 📜  Follow Lab UI logs only
 	docker logs -f lab-ui
+
+.PHONY: logs-init
+logs-init:                              ## 📜  Show model-init logs (check if first pull succeeded)
+	docker logs model-init
 
 .PHONY: status
 status:                                 ## ℹ️   Container status + GPU memory
