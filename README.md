@@ -118,6 +118,7 @@ make rm-model MODEL=… Remove a model
 make logs           Follow all logs
 make logs-ollama    Follow Ollama logs
 make logs-ui        Follow Lab UI logs
+make logs-init      Show model-init logs (check if first pull succeeded)
 make status         Container status + GPU memory
 make chat MODEL=…   Terminal chat (no UI)
 make help           Show this help
@@ -171,4 +172,4 @@ This rebuilds only the `lab-ui` container and restarts it without touching Ollam
 
 ## License
 
-MIT © 2025 [Nkonstan](https://github.com/Nkonstan/llm-local-lab)
+MIT © 2026 [Nkonstan](https://github.com/Nkonstan/llm-local-lab)
