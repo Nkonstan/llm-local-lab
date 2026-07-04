@@ -1209,9 +1209,9 @@ input[type="range"]::-moz-range-thumb {
         <div class="param-block">
           <div class="param-row">
             <span class="param-label">Temperature</span>
-            <span class="param-value" id="temperature-val">0.70</span>
+            <span class="param-value" id="temperature-val">0.05</span>
           </div>
-          <input type="range" id="temperature" min="0" max="2" step="0.05" value="0.7">
+          <input type="range" id="temperature" min="0" max="2" step="0.05" value="0.05">
           <div class="param-hint">Randomness of output. 0 = deterministic, 2 = very creative.</div>
         </div>
 
@@ -1391,14 +1391,14 @@ input[type="range"]::-moz-range-thumb {
 const OLLAMA_BASE = 'http://localhost:11434';
 
 const DEFAULT_PARAMS = {
-  temperature:    0.7,
+  temperature:    0.05,
   top_p:          0.9,
   top_k:          40,
   repeat_penalty: 1.1,
   max_tokens:     65536,
   num_ctx:        65536,
   seed:           -1,
-  think_mode:     'budget', // 'on' | 'budget' | 'off'
+  think_mode:     'off', // 'on' | 'budget' | 'off'
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1436,9 +1436,42 @@ const $delModelName   = document.getElementById('del-model-name');
 const $delCancelBtn   = document.getElementById('del-cancel-btn');
 const $delConfirmBtn  = document.getElementById('del-confirm-btn');
 
-// Show/hide delete button based on whether a real model is selected
+// Returns true when the currently selected model is gpt-oss (the only model
+// that accepts string budget levels: "low" | "medium" | "high").
+// All other models only support think: true | false per official Ollama docs.
+function isGptOss(modelName) {
+  return (modelName || '').toLowerCase().startsWith('gpt-oss');
+}
+
+// Update the Budget level sub-buttons and hint text to reflect whether the
+// selected model actually supports string budget levels (gpt-oss only).
+function updateThinkModeForModel(modelName) {
+  const gptOss = isGptOss(modelName);
+  const budgetRow = document.getElementById('think-budget-row');
+  const hint = document.getElementById('think-mode-hint');
+  const activeMode = document.querySelector(
+    '.think-mode-btn.active-think, .think-mode-btn.active-budget, .think-mode-btn.active-nothink'
+  )?.dataset.mode;
+
+  if (budgetRow.style.display !== 'none' && activeMode === 'budget') {
+    // Budget row is currently visible — update its appearance
+    if (gptOss) {
+      budgetRow.style.opacity = '1';
+      budgetRow.style.pointerEvents = 'auto';
+      hint.textContent = 'Limits thinking to N tokens. Balances speed and quality.';
+    } else {
+      budgetRow.style.opacity = '0.35';
+      budgetRow.style.pointerEvents = 'none';
+      hint.textContent = 'Budget levels (Low/Med/High/Max) are only supported by GPT-OSS. Other models use full thinking.';
+    }
+  }
+}
+
+// Show/hide delete button based on whether a real model is selected,
+// and sync the think-mode UI with what the selected model supports.
 $modelSelect.addEventListener('change', () => {
   $deleteModelBtn.style.display = $modelSelect.value ? 'inline-flex' : 'none';
+  updateThinkModeForModel($modelSelect.value);
 });
 
 function openDeleteModal() {
@@ -1567,6 +1600,9 @@ function setThinkMode(mode) {
   const budgetRow = document.getElementById('think-budget-row');
   budgetRow.style.display = mode === 'budget' ? 'flex' : 'none';
   document.getElementById('think-mode-hint').textContent = THINK_HINTS[mode];
+  // After showing the budget row, reflect whether the selected model
+  // actually supports string budget levels (gpt-oss only).
+  if (mode === 'budget') updateThinkModeForModel($modelSelect.value);
 }
 
 document.querySelectorAll('.think-mode-btn').forEach(btn => {
@@ -2358,11 +2394,12 @@ async function sendMessage(userText) {
   apiMessages.push(...messages);
 
   // think parameter per official Ollama API docs:
-  // think: true  = full thinking (boolean)
-  // think: false = no thinking (boolean)
-  // think: "low" | "medium" | "high" | "max" = budget levels
+  // Most models: think: true (full thinking) or think: false (no thinking)
+  // GPT-OSS only: think: "low" | "medium" | "high" (string budget levels)
+  // Sending a string level to Qwen3/DeepSeek/etc. is undocumented and causes
+  // uncontrolled full thinking — so Budget mode maps to true for those models.
   const thinkValue = params.think_mode === 'off'    ? false
-                   : params.think_mode === 'budget' ? params.think_level
+                   : params.think_mode === 'budget' ? (isGptOss(model) ? params.think_level : true)
                    : true;
 
   const body = {
@@ -2448,15 +2485,39 @@ async function sendMessage(userText) {
           thinkChunks++;
           fullThinking += chunk.message.thinking;
           const toks = Math.round(fullThinking.length / 4);
-          streamBody.textContent = `💭 Thinking… (~${toks} tokens)`;
+
+          // Build the live thinking panel on first thinking chunk
+          let liveBlock = streamBody.querySelector('.live-thinking-block');
+          if (!liveBlock) {
+            streamBody.textContent = '';
+            liveBlock = document.createElement('div');
+            liveBlock.className = 'thinking-block live-thinking-block';
+            const toggle = document.createElement('button');
+            toggle.className = 'thinking-toggle';
+            toggle.innerHTML = `💭 Thinking… <span class="thinking-token-count" id="live-think-count">(~${toks} tokens)</span><span class="thinking-chevron">▾</span>`;
+            toggle.addEventListener('click', () => liveBlock.classList.toggle('open'));
+            const content = document.createElement('div');
+            content.className = 'thinking-content';
+            content.id = 'live-think-content';
+            liveBlock.appendChild(toggle);
+            liveBlock.appendChild(content);
+            streamBody.appendChild(liveBlock);
+          }
+
+          // Update token count and content
+          const countEl   = streamBody.querySelector('#live-think-count');
+          const contentEl = streamBody.querySelector('#live-think-content');
+          if (countEl)   countEl.textContent = `(~${toks} tokens)`;
+          if (contentEl) {
+            contentEl.textContent = fullThinking;
+            // Auto-scroll the thinking panel if it is open
+            contentEl.scrollTop = contentEl.scrollHeight;
+          }
           scrollToBottom();
         }
 
         if (chunk.message?.content) {
           contentChunks++;
-          if (contentChunks <= 3) {
-            console.log(`[DEBUG] content chunk #${contentChunks}:`, JSON.stringify(chunk.message.content));
-          }
           // content may also contain <think> tags if Ollama changes behavior
           fullContent += chunk.message.content;
           const hasOpen  = fullContent.includes('<think>');
@@ -2464,7 +2525,31 @@ async function sendMessage(userText) {
           if (hasOpen && !hasClose) {
             const thinkSoFar = fullContent.split('<think>')[1] || '';
             const toks = Math.round(thinkSoFar.length / 4);
-            streamBody.textContent = `💭 Thinking… (~${toks} tokens)`;
+
+            // Build the live thinking panel for <think>-tag style models
+            let liveBlock = streamBody.querySelector('.live-thinking-block');
+            if (!liveBlock) {
+              streamBody.textContent = '';
+              liveBlock = document.createElement('div');
+              liveBlock.className = 'thinking-block live-thinking-block';
+              const toggle = document.createElement('button');
+              toggle.className = 'thinking-toggle';
+              toggle.innerHTML = `💭 Thinking… <span class="thinking-token-count" id="live-think-count">(~${toks} tokens)</span><span class="thinking-chevron">▾</span>`;
+              toggle.addEventListener('click', () => liveBlock.classList.toggle('open'));
+              const content = document.createElement('div');
+              content.className = 'thinking-content';
+              content.id = 'live-think-content';
+              liveBlock.appendChild(toggle);
+              liveBlock.appendChild(content);
+              streamBody.appendChild(liveBlock);
+            }
+            const countEl   = streamBody.querySelector('#live-think-count');
+            const contentEl = streamBody.querySelector('#live-think-content');
+            if (countEl)   countEl.textContent = `(~${toks} tokens)`;
+            if (contentEl) {
+              contentEl.textContent = thinkSoFar;
+              contentEl.scrollTop = contentEl.scrollHeight;
+            }
           } else if (hasOpen && hasClose) {
             streamBody.textContent = fullContent.split('</think>').slice(1).join('</think>').trimStart();
           } else {
