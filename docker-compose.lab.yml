@@ -1,17 +1,71 @@
-# ── Lab UI ───────────────────────────────────────────────────────────────────
-# Custom experimentation UI with live parameter controls and response timing.
-# Talks directly to Ollama's API from the browser (localhost:11434).
+# ── Lab App + Lab API ────────────────────────────────────────────────────────
+# Custom experimentation UI (Chat / A-B Diff / Eval Harness, one app, one
+# port, tab-switched) and the backend it talks to. Lab App never calls
+# Ollama directly from the browser — it calls lab-api, which proxies to
+# Ollama server-side and persists conversations / eval runs / judgments to
+# SQLite.
+#
+# Lab App used to be two separate containers (lab-ui on :3001, lab-eval on
+# :3002) with Chat in one and A/B Diff + Eval Harness in the other. They're
+# merged into one service now: same three tools, same button-toggle pattern
+# Eval already used between Diff and Eval, just one more tab and one port
+# instead of two. See README.md for the shared modules this reuses.
+#
+# Build context for lab-app is the repo root (not its own folder) so its
+# Dockerfile can COPY services/shared/ alongside its own files.
 # Usage: compose this file alongside the base + a hardware overlay.
 
 services:
-  lab-ui:
+  lab-api:
     build:
-      context: ./services/lab-ui
+      context: ./services/lab-api
       dockerfile: Dockerfile
-    container_name: lab-ui
+    container_name: lab-api
+    environment:
+      # Internal docker-network address — the backend reaches Ollama by
+      # service name, not localhost (it's a different container).
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - LAB_DB_PATH=/data/lab.db
+      - LAB_API_ORIGINS=http://localhost:${LAB_PORT:-3001}
+      - JUDGE_MODEL=${JUDGE_MODEL:-qwen3:2b}
+      # Eval Harness sweep concurrency — how many cells the backend will
+      # generate against Ollama at once (see EVAL_MAX_CONCURRENCY in
+      # .env.example). Unrelated to OLLAMA_NUM_PARALLEL above: that's
+      # Ollama's own internal setting, this is lab-api's request-side cap.
+      - EVAL_MAX_CONCURRENCY=${EVAL_MAX_CONCURRENCY:-2}
+      # Timeouts for the one optional hosted-baseline cell (an
+      # OpenAI-compatible endpoint), independent of the Ollama timeouts.
+      - HOSTED_CONNECT_TIMEOUT=${HOSTED_CONNECT_TIMEOUT:-10}
+      - HOSTED_READ_TIMEOUT=${HOSTED_READ_TIMEOUT:-600}
+    volumes:
+      - lab_api_data:/data
     ports:
-      - "${LAB_PORT:-3001}:80"
+      - "${LAB_API_PORT:-8000}:8000"
     depends_on:
       ollama:
         condition: service_healthy
     restart: unless-stopped
+
+  # ── Lab App ──────────────────────────────────────────────────────────────
+  # Chat, A/B diff (two independently-configured models side by side), and
+  # an Eval Harness that sweeps any number of axes (model, temperature, or
+  # any other parameter — including an optional hosted-baseline reference
+  # cell) across a prompt dataset and renders the results as a heatmap grid,
+  # plus a scorer/judge panel for grading a finished run. One nginx
+  # container serving one static bundle; the three tools are tabs within it,
+  # not separate pages.
+  lab-app:
+    build:
+      context: .
+      dockerfile: services/lab-app/Dockerfile
+    container_name: lab-app
+    ports:
+      - "${LAB_PORT:-3001}:80"
+    depends_on:
+      lab-api:
+        condition: service_started
+    restart: unless-stopped
+
+volumes:
+  lab_api_data:
+    driver: local

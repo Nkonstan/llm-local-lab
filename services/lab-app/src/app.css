@@ -1,0 +1,1431 @@
+/* ── Lab App — merged styles ───────────────────────────────────────────
+   Base: everything that was in Lab Eval's app.css (Diff view, Eval
+   Harness, grid/axis/scorer panels, and the component styles Diff/Eval
+   already shared with Lab UI). Appended at the end of this file: the
+   pieces that only existed in Lab UI's app.css — chat layout, and the
+   "Browse & Pull Models" library browser now merged into the single
+   Manage Models modal. See model-catalog.js for why they're one modal
+   now instead of two. */
+
+/* --panel-width: 240px works well for Diff's two side-by-side panels and
+   Eval's dense sidebar. Chat only has one such panel and the full window
+   to itself, so it gets a wider one — scoped here rather than forking a
+   second class, since every panel already reads this custom property. */
+:root { --panel-width: 240px; }
+#view-chat { --panel-width: 280px; }
+
+
+/* Top-level view tabs (Diff / Eval) — distinct from modal-tabs */
+
+.main-tabs {
+  display: flex;
+  gap: 4px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 3px;
+}
+
+.main-tab {
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .15s;
+  white-space: nowrap;
+}
+
+.main-tab:hover { color: var(--text); }
+
+.main-tab.active { background: var(--accent); color: #fff; }
+
+.status-label { font-size: 12px; color: var(--text-muted); white-space: nowrap; }
+
+/* ── Generic modal shell (reused by Manage Models + Delete confirm) ─── */
+
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.65);
+  z-index: 200;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-overlay.open { display: flex; }
+
+#models-modal {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 14px;
+  width: 680px;   /* was 480px — widened to fit the merged library browser */
+  max-width: 95vw;
+  max-height: 82vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 24px 64px rgba(0,0,0,.6);
+  animation: modalIn .18s ease;
+}
+
+.modal-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.modal-empty {
+  text-align: center;
+  padding: 30px 20px;
+  color: var(--text-dim);
+  font-size: 13px;
+}
+
+/* Manage Models modal specifics */
+
+/* #modal-custom-input / #modal-pull-custom below (in the library-browser
+   section further down) replaced these — the merged modal has one
+   custom-name pull box, not two. */
+
+.models-pull-progress {
+  display: none;
+  align-items: center;
+  gap: 10px;
+  padding: 0 16px 14px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.models-pull-progress.active { display: flex; }
+
+.models-pull-progress .pull-status-text { font-size: 11.5px; color: var(--accent); flex-shrink: 0; }
+
+.model-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 9px 12px;
+  transition: border-color .12s;
+}
+
+.model-row:hover { border-color: var(--border2); }
+
+.model-row-name {
+  flex: 1;
+  font-size: 12.5px;
+  color: var(--text);
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+.model-row-delete {
+  background: transparent;
+  border: 1px solid rgba(248,113,113,.3);
+  color: var(--red);
+  border-radius: 6px;
+  padding: 4px 9px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 600;
+  transition: all .15s;
+  flex-shrink: 0;
+}
+
+.model-row-delete:hover { background: rgba(248,113,113,.15); border-color: var(--red); }
+
+/* ── Views (Diff / Eval) ─────────────────────────────── */
+
+.view { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+.view.hidden { display: none; }
+
+/* Eval Harness Config A/B panels — same internal markup and ids as .param-side
+   (built by the same buildParamPanelHTML template) but presented as a block
+   card inside the scrolling eval sidebar rather than a fixed-width column. */
+
+.param-card {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  margin-bottom: 10px;
+  overflow: hidden;
+}
+
+/* ── Param side panels (shared by L/R diff panels + A/B eval configs) ── */
+
+.param-side {
+  width: var(--panel-width);
+  flex-shrink: 0;
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: width .18s ease, min-width .18s ease;
+}
+
+.param-side.collapsed { width: 40px; }
+
+.param-side.collapsed .params-scroll,
+.param-side.collapsed .panel-actions,
+.param-side.collapsed .model-select { display: none; }
+
+.param-side-L { border-right: 1px solid var(--border); }
+
+.param-side-R { border-left: 1px solid var(--border); }
+
+.param-side-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 10px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.param-side.collapsed .param-side-header { flex-direction: column; height: 100%; padding-top: 14px; }
+
+.side-badge {
+  width: 22px; height: 22px;
+  border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.side-badge-L { background: rgba(96,165,250,.14); color: var(--blue); }
+
+.side-badge-R { background: var(--accent-dim); color: var(--accent); }
+
+.side-badge-A { background: rgba(96,165,250,.14); color: var(--blue); }
+
+.side-badge-B { background: var(--accent-dim); color: var(--accent); }
+
+.side-badge-BASE { background: var(--surface3); color: var(--text-muted); }
+
+.collapse-toggle {
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-size: 12px;
+  padding: 3px 5px;
+  border-radius: 5px;
+  flex-shrink: 0;
+  transition: all .15s;
+}
+
+.collapse-toggle:hover { background: var(--surface2); color: var(--text); }
+
+.model-select {
+  flex: 1;
+  min-width: 0;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 5px 26px 5px 8px;
+  border-radius: 7px;
+  font-size: 12px;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238080a4' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 6px center;
+  transition: border-color .15s;
+}
+
+.model-select:hover { border-color: var(--accent); }
+
+.model-select:focus { outline: none; border-color: var(--accent); }
+
+.params-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.system-prompt-input {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  color: var(--text);
+  font-size: 12px;
+  padding: 8px;
+  resize: vertical;
+  min-height: 52px;
+  max-height: 160px;
+  font-family: inherit;
+  line-height: 1.4;
+  transition: border-color .15s;
+}
+
+.system-prompt-input:focus { outline: none; border-color: var(--accent); }
+
+.system-prompt-input::placeholder { color: var(--text-dim); }
+
+.param-block {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 9px 10px;
+  margin-bottom: 4px;
+  transition: border-color .15s;
+}
+
+.param-label {
+  font-size: 11.5px;
+  color: var(--text);
+  font-weight: 500;
+}
+
+.param-value {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+  min-width: 34px;
+  text-align: right;
+}
+
+.param-hint {
+  font-size: 9.5px;
+  color: var(--text-dim);
+  margin-top: 4px;
+  line-height: 1.3;
+}
+
+.panel-actions {
+  padding: 10px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.btn {
+  width: 100%;
+  padding: 8px;
+  border-radius: 7px;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all .15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: transparent;
+  color: var(--text);
+}
+
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+
+.btn-primary:hover:not(:disabled) { background: var(--accent2); }
+
+.btn-ghost:hover:not(:disabled) { background: var(--surface2); color: var(--text); }
+
+.btn-danger-ghost { color: var(--red); border-color: rgba(248,113,113,.3); }
+
+.btn-danger-ghost:hover:not(:disabled) { background: rgba(248,113,113,.12); border-color: var(--red); }
+
+/* Thinking mode controls */
+
+.think-mode-btn {
+  flex: 1;
+  padding: 5px 4px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--text-muted);
+  font-size: 10.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .15s;
+  text-align: center;
+}
+
+.think-level-btn {
+  flex: 1;
+  padding: 4px 3px;
+  border-radius: 5px;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--text-muted);
+  font-size: 9.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .15s;
+  text-align: center;
+}
+
+.stats-summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  cursor: pointer;
+  user-select: none;
+  transition: background .12s;
+  flex-wrap: wrap;
+}
+
+.stats-pill {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-muted);
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Chat columns (Diff view) ───────────────────────────────────── */
+
+.diff-workspace { display: flex; flex: 1; overflow: hidden; }
+
+.chat-side {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+.messages-container {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.welcome {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: var(--text-dim);
+  padding: 30px;
+  text-align: center;
+}
+
+.welcome-icon { font-size: 36px; margin-bottom: 4px; }
+
+.welcome h2 { font-size: 16px; color: var(--text-muted); font-weight: 500; }
+
+.welcome p { font-size: 12.5px; max-width: 320px; line-height: 1.6; }
+
+.role-badge {
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  padding: 2px 7px;
+  border-radius: 4px;
+}
+
+.message-body {
+  padding: 10px 12px;
+  border-radius: 10px;
+  line-height: 1.6;
+  font-size: 13px;
+  border: 1px solid transparent;
+}
+
+.message-body pre code { background: none; border: none; padding: 0; font-size: 12px; color: #c9d1e0; line-height: 1.5; }
+
+.thinking-toggle {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 12px;
+  cursor: pointer;
+  user-select: none;
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--yellow);
+  background: transparent;
+  border: none;
+  width: 100%;
+  text-align: left;
+  transition: background .12s;
+}
+
+.thinking-content {
+  display: none;
+  padding: 0 12px 10px;
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+  border-top: 1px solid rgba(251,191,36,.1);
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+/* ── Diff divider (between L and R columns) ─────────────────────── */
+
+.diff-divider {
+  width: 172px;
+  flex-shrink: 0;
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  padding: 12px 8px;
+}
+
+.diff-divider-title {
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--text-dim);
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.diff-summary-pill {
+  text-align: center;
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 5px 6px;
+  border-radius: 6px;
+  margin-bottom: 10px;
+}
+
+.diff-summary-pill.identical { background: rgba(74,222,128,.1); color: var(--green); border: 1px solid rgba(74,222,128,.25); }
+
+.diff-summary-pill.differs   { background: var(--accent-dim); color: var(--accent); border: 1px solid rgba(139,114,248,.3); }
+
+.diff-sync-row { display: flex; gap: 4px; margin-bottom: 10px; }
+
+.diff-sync-btn {
+  flex: 1;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  border-radius: 6px;
+  padding: 4px 2px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all .15s;
+}
+
+.diff-sync-btn:hover { background: var(--surface3); color: var(--text); border-color: var(--border2); }
+
+.diff-row {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 5px 7px;
+  margin-bottom: 5px;
+}
+
+.diff-row.differs { border-color: rgba(139,114,248,.4); background: var(--accent-dim); }
+
+.diff-key {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  color: var(--text-dim);
+  margin-bottom: 2px;
+}
+
+.diff-row.differs .diff-key { color: var(--accent); }
+
+.diff-vals {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.diff-val-l { color: var(--blue); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+
+.diff-val-r { color: var(--accent); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; text-align: right; }
+
+.diff-sep { color: var(--text-dim); font-size: 9px; flex-shrink: 0; }
+
+/* ── Input area (shared bar under Diff view) ────────────────────── */
+
+.input-area {
+  padding: 12px 18px 14px;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+  flex-shrink: 0;
+}
+
+[id^="stop-btn"] {
+  width: 44px; height: 44px;
+  border-radius: 10px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  transition: all .15s;
+  flex-shrink: 0;
+}
+
+/* ── Eval Harness layout ─────────────────────────────────────────── */
+
+.eval-layout { display: flex; flex: 1; overflow: hidden; }
+
+.eval-sidebar {
+  width: 360px;
+  flex-shrink: 0;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  padding: 12px;
+  gap: 4px;
+}
+
+.eval-dataset-textarea {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font-family: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+  font-size: 11.5px;
+  line-height: 1.5;
+  padding: 9px 10px;
+  resize: vertical;
+  min-height: 130px;
+  max-height: 320px;
+  transition: border-color .15s;
+}
+
+.eval-dataset-textarea:focus { outline: none; border-color: var(--accent); }
+
+.eval-dataset-textarea::placeholder { color: var(--text-dim); }
+
+.eval-dataset-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 6px 2px 10px;
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.eval-dataset-count { font-variant-numeric: tabular-nums; }
+
+.eval-config-block { margin-top: 4px; }
+
+.eval-config-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px;
+  margin-bottom: 4px;
+}
+
+.eval-config-toggle {
+  width: 100%;
+  background: none;
+  border: none;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background .1s;
+}
+
+.eval-config-toggle:hover { background: var(--surface2); }
+
+.eval-config-chevron {
+  margin-left: auto;
+  color: var(--text-dim);
+  font-size: 11px;
+  transition: transform .15s;
+}
+
+.eval-config-toggle[aria-expanded="true"] .eval-config-chevron { transform: rotate(90deg); }
+
+.eval-run-actions {
+  margin-top: 8px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.eval-main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+.eval-progress-wrap {
+  padding: 10px 18px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.eval-progress-text {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+
+.eval-progress-text .val { color: var(--accent); font-weight: 600; }
+
+.eval-progress-track { height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+
+.eval-progress-fill { height: 100%; background: var(--accent); border-radius: 2px; width: 0%; transition: width .2s ease; }
+
+.eval-config-summary {
+  padding: 8px 18px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+  font-size: 11px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.eval-config-summary b { color: var(--text); }
+
+.eval-table-wrap { flex: 1; overflow: auto; padding: 0 18px 18px; }
+
+table.eval-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 12px; }
+
+.eval-table thead th {
+  position: sticky;
+  top: 0;
+  background: var(--surface);
+  text-align: left;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border2);
+  color: var(--text-dim);
+  font-size: 9.5px;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  font-weight: 700;
+  z-index: 1;
+}
+
+.eval-table tbody td { padding: 9px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+
+.eval-row { cursor: pointer; transition: background .12s; }
+
+.eval-row:hover { background: var(--surface2); }
+
+.eval-row.expanded { background: var(--surface2); }
+
+.eval-idx { color: var(--text-dim); font-variant-numeric: tabular-nums; width: 26px; }
+
+.eval-cell-text {
+  max-width: 240px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
+.eval-status-pill {
+  font-size: 9.5px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: .03em;
+  white-space: nowrap;
+}
+
+.eval-status-pill.pending { background: var(--surface3); color: var(--text-dim); }
+
+.eval-status-pill.running { background: rgba(96,165,250,.12); color: var(--blue); }
+
+.eval-status-pill.done    { background: rgba(74,222,128,.12); color: var(--green); }
+
+.eval-status-pill.error   { background: rgba(248,113,113,.12); color: var(--red); }
+
+.eval-stat-mini { font-size: 10.5px; color: var(--text-dim); font-variant-numeric: tabular-nums; white-space: nowrap; line-height: 1.6; }
+
+.eval-stat-mini .hl { color: var(--accent); font-weight: 600; }
+
+.eval-detail-row td { background: var(--surface); padding: 14px 16px; }
+
+.eval-detail-prompt {
+  margin-bottom: 12px;
+  font-size: 12.5px;
+  color: var(--text);
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  white-space: pre-wrap;
+}
+
+.eval-detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+.eval-detail-col { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; min-width: 0; }
+
+.eval-detail-col h4 {
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  color: var(--text-dim);
+  margin-bottom: 7px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.eval-detail-response {
+  word-break: break-word;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--text);
+  max-height: 260px;
+  overflow-y: auto;
+  margin-bottom: 8px;
+  padding-right: 4px;
+}
+
+.eval-detail-stats { display: flex; flex-wrap: wrap; gap: 8px 14px; font-size: 11px; color: var(--text-dim); border-top: 1px solid var(--border); padding-top: 8px; }
+
+.eval-detail-stats .val { color: var(--accent); font-weight: 600; }
+
+.eval-export-actions { display: flex; gap: 8px; padding: 12px 18px; border-top: 1px solid var(--border); flex-shrink: 0; }
+
+.eval-export-actions .btn { width: auto; padding: 7px 14px; }
+
+.eval-empty-state {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--text-dim);
+  padding: 30px;
+  text-align: center;
+}
+
+.eval-empty-state .welcome-icon { font-size: 34px; }
+
+/* Pull progress (reused inside Manage Models modal) */
+
+.pull-progress-row { display: flex; align-items: center; gap: 8px; flex: 1; }
+
+.pull-bar-track { flex: 1; height: 3px; background: rgba(139,114,248,.2); border-radius: 2px; overflow: hidden; }
+
+#toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--surface3);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 13px;
+  color: var(--text);
+  opacity: 0;
+  transition: all .2s;
+  z-index: 400;
+  pointer-events: none;
+  white-space: nowrap;
+}
+/* ── Axis picker (eval-harness redesign) ─────────────────────────────────── */
+
+.axis-row {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px;
+  margin-bottom: 8px;
+}
+
+.axis-row-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.axis-param-select {
+  flex: 1;
+  background: var(--surface3);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 4px 8px;
+  border-radius: 5px;
+  font-size: 12px;
+}
+
+.axis-remove-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-size: 13px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.axis-remove-btn:hover { background: rgba(248,113,113,.12); color: var(--red); }
+
+.axis-add-btn { width: auto; padding: 6px 12px; margin-top: 2px; font-size: 12px; }
+
+.axis-values-text, .axis-values-textarea {
+  background: var(--surface3);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 5px 8px;
+  border-radius: 5px;
+  font-size: 12px;
+  width: 100%;
+  font-variant-numeric: tabular-nums;
+  resize: vertical;
+}
+
+.axis-values-text:focus, .axis-values-textarea:focus { outline: none; border-color: var(--accent); }
+
+.axis-values-empty { font-size: 11px; color: var(--text-dim); padding: 4px 0; }
+
+.axis-model-checks, .axis-bool-checks {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  max-height: 140px;
+  overflow-y: auto;
+}
+
+.axis-model-check {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+
+.axis-model-check:hover { background: var(--surface3); color: var(--text); }
+
+.hosted-input { margin-bottom: 6px; }
+
+.sweep-preview {
+  font-size: 11px;
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  padding: 6px 0;
+}
+
+/* ── Grid / heatmap view ──────────────────────────────────────────────────── */
+
+.grid-controls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+  padding: 4px 18px 12px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.grid-controls label { display: flex; align-items: center; gap: 6px; }
+
+.grid-controls select {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.grid-axis-pickers { display: flex; flex-wrap: wrap; gap: 14px; }
+
+.grid-legend {
+  font-size: 10.5px;
+  color: var(--text-dim);
+  font-style: italic;
+  flex-basis: 100%;
+}
+
+#eval-grid { padding: 0 18px; overflow-x: auto; }
+
+.grid-table { border-collapse: separate; border-spacing: 6px; }
+
+.grid-table th {
+  font-size: 11px;
+  color: var(--text-dim);
+  font-weight: 600;
+  padding: 4px 8px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.grid-cell {
+  min-width: 64px;
+  height: 48px;
+  border-radius: 8px;
+  text-align: center;
+  cursor: pointer;
+  transition: transform .1s, box-shadow .1s;
+  border: 2px solid transparent;
+}
+
+.grid-cell:hover { transform: scale(1.04); }
+
+.grid-cell-selected { border-color: var(--text); }
+
+.grid-cell-missing {
+  background: var(--surface2) !important;
+  color: var(--text-dim);
+  cursor: default;
+}
+
+.grid-cell-value {
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0,0,0,.4);
+}
+
+.grid-baseline-row {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--border2);
+}
+
+.grid-baseline-label {
+  display: block;
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-bottom: 6px;
+}
+
+.grid-detail {
+  margin: 14px 18px 0;
+  padding-bottom: 14px;
+}
+
+.grid-detail-header {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 10px;
+}
+
+.grid-config-badge {
+  background: var(--surface3);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-weight: 500;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.grid-prompt-detail {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin-bottom: 8px;
+}
+
+.grid-prompt-detail summary {
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--text);
+  font-weight: 600;
+}
+
+.grid-repeat { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); }
+
+.grid-repeat:first-of-type { border-top: none; margin-top: 6px; }
+
+.grid-repeat-idx {
+  font-size: 10.5px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  margin-bottom: 4px;
+}
+
+/* ── Dedicated AI Evaluation grid (redesign item 3) ──────────────────────── */
+
+.ai-eval-grid-wrap { margin-top: 4px; border-top: 1px solid var(--border); }
+
+.ai-eval-dim-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+
+.ai-eval-dim-tab {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background .1s, color .1s, border-color .1s;
+}
+
+.ai-eval-dim-tab:hover { color: var(--text); }
+
+.ai-eval-dim-tab.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  font-weight: 600;
+}
+
+/* ── Chat layout (merged from Lab UI's app.css) ─────────────────────────── */
+
+.workspace {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.chat-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Chat's single always-visible param panel — same shape as .param-side
+   (width/flex/overflow) plus the right-hand border Diff doesn't need
+   (Diff separates L from the messages column with .diff-divider instead). */
+.params-panel {
+  width: var(--panel-width);
+  flex-shrink: 0;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.shortcut-badge {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 3px 8px;
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: monospace;
+}
+
+.welcome-shortcuts {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+/* Chat's welcome screen has the full window to itself (Diff/Eval's welcome
+   states share narrower columns), so it gets a larger icon/heading — same
+   values Lab UI originally used, scoped here instead of overriding the
+   base .welcome-icon / .welcome h2 globally. */
+#view-chat .welcome-icon { font-size: 48px; margin-bottom: 8px; }
+#view-chat .welcome h2 { font-size: 20px; color: var(--text-muted); font-weight: 500; }
+
+.side-badge-CHAT { background: rgba(74,222,128,.14); color: var(--green); }
+
+/* ── Manage Models — library browser (merged from Lab UI's app.css) ─────
+   The "Browse & Pull Models" experience: search, category tabs, a curated
+   card list with a size picker. Sits above the "Installed Models" section
+   (styled by the .modal-list / .modal-empty rules already above, shared
+   with every other modal in the app) inside the same #models-modal. ───── */
+
+.modal-search-wrap {
+  padding: 12px 12px 8px;
+  flex-shrink: 0;
+}
+
+#modal-search {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 13px;
+  padding: 8px 12px;
+  transition: border-color .15s;
+}
+
+#modal-search:focus { outline: none; border-color: var(--accent); }
+#modal-search::placeholder { color: var(--text-dim); }
+
+.modal-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}
+
+.modal-tab {
+  padding: 4px 11px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .15s;
+  white-space: nowrap;
+  letter-spacing: .02em;
+}
+
+.modal-tab:hover { border-color: var(--border2); color: var(--text); background: var(--surface2); }
+.modal-tab.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+.modal-status-bar {
+  padding: 4px 16px 6px;
+  flex-shrink: 0;
+}
+
+#modal-status, .modal-status {
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.model-card {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 11px 14px;
+  cursor: pointer;
+  transition: border-color .12s, background .12s;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.model-card:hover { border-color: var(--accent); background: var(--surface3); }
+.model-card.already-have { opacity: .55; cursor: default; }
+.model-card.already-have:hover { border-color: var(--border); background: var(--surface2); }
+.model-card.pulling {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+  cursor: default;
+  pointer-events: none;
+}
+
+.model-card-info { flex: 1; min-width: 0; }
+
+.model-card-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 3px;
+}
+
+.model-badge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 3px;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.model-badge.installed { background: rgba(74,222,128,.12); color: var(--green); border: 1px solid rgba(74,222,128,.25); }
+.model-badge.cat-general    { background: rgba(96,165,250,.12);  color: var(--blue);       border: 1px solid rgba(96,165,250,.25); }
+.model-badge.cat-reasoning  { background: rgba(139,114,248,.12); color: var(--accent);      border: 1px solid rgba(139,114,248,.25); }
+.model-badge.cat-coding     { background: rgba(74,222,128,.12);  color: var(--green);       border: 1px solid rgba(74,222,128,.25); }
+.model-badge.cat-compact    { background: rgba(251,191,36,.12);  color: var(--yellow);      border: 1px solid rgba(251,191,36,.25); }
+.model-badge.cat-vision     { background: rgba(248,113,113,.12); color: var(--red);         border: 1px solid rgba(248,113,113,.25); }
+.model-badge.cat-uncensored { background: rgba(248,113,113,.10); color: var(--red);         border: 1px solid rgba(248,113,113,.22); }
+.model-badge.cat-embedding  { background: rgba(128,128,164,.12); color: var(--text-muted);  border: 1px solid rgba(128,128,164,.25); }
+.model-badge.size { background: var(--surface3); color: var(--text-muted); border: 1px solid var(--border); }
+
+.model-card-desc {
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.model-card-meta {
+  font-size: 11px;
+  color: var(--text-dim);
+  white-space: nowrap;
+  flex-shrink: 0;
+  text-align: right;
+}
+
+.model-card-sizes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 4px 0 5px;
+}
+
+.size-pill {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 7px;
+  border-radius: 10px;
+  background: var(--surface3);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  letter-spacing: .03em;
+}
+
+.modal-footer {
+  padding: 10px 20px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+#modal-custom-input {
+  flex: 1;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  color: var(--text);
+  font-size: 12px;
+  padding: 6px 10px;
+  transition: border-color .15s;
+}
+
+#modal-custom-input:focus { outline: none; border-color: var(--accent); }
+#modal-custom-input::placeholder { color: var(--text-dim); }
+
+#modal-pull-custom {
+  background: var(--accent);
+  border: none;
+  border-radius: 7px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 14px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .15s;
+}
+
+#modal-pull-custom:hover { background: var(--accent2); }
+
+/* Size picker popover */
+
+#size-picker {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0; right: 0;
+  background: var(--surface3);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  padding: 10px 12px 12px;
+  z-index: 300;
+  box-shadow: 0 8px 32px rgba(0,0,0,.5);
+  animation: modalIn .12s ease;
+}
+
+.sp-arrow {
+  position: absolute;
+  bottom: -6px;
+  left: 20px;
+  width: 10px; height: 10px;
+  background: var(--surface3);
+  border-right: 1px solid var(--border2);
+  border-bottom: 1px solid var(--border2);
+  transform: rotate(45deg);
+}
+
+.sp-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 2px;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+
+.sp-hint { font-size: 10px; color: var(--text-dim); margin-bottom: 8px; }
+
+.sp-sizes { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.sp-btn {
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  color: var(--text);
+  border-radius: 7px;
+  padding: 5px 13px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .12s;
+}
+
+.sp-btn:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
+.sp-default { color: var(--text-muted); font-weight: 400; font-style: italic; }
+.sp-default:hover { color: #fff; }
+
+/* Inline per-card pull progress (distinct from the .pull-progress-row /
+   .pull-bar-track bar already styled above, which this reuses as-is —
+   both the card-based and custom-name pulls share those two classes). */
+.pull-progress {
+  font-size: 11px;
+  color: var(--accent);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
+  min-width: 90px;
+}

@@ -1,1 +1,39 @@
+# ── Secrets / local config ──────────────────────────────────────────────────
+# Real config lives in .env (gitignored); .env.example is the template and
+# IS meant to be committed, so it's explicitly un-ignored below.
 .env
+.env.*
+!.env.example
+
+# ── Local data / runtime state ──────────────────────────────────────────────
+# lab-api's SQLite db normally lives inside the named Docker volume
+# (lab_api_data), never in the repo — but these guard against one showing up
+# locally if lab-api is ever run outside Docker.
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+/data/
+
+# ── Python ───────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.venv/
+venv/
+
+# ── Node (frontend jsdom test deps only — nothing is built/bundled) ─────────
+node_modules/
+npm-debug.log*
+
+# ── Editor / OS cruft ────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+
+# ── Misc ─────────────────────────────────────────────────────────────────────
+*.log
+.env.local

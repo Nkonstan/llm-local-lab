@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LLM Local Lab</title>
+<!-- ?v=N on the stylesheets/script below: plain nginx serving static files
+     has no build step and no content-hashed filenames, so a browser that
+     already loaded base.css once will keep using its cached copy even after
+     `make rebuild-app` — bump every v=N here when editing shared/ or this
+     app's own CSS/JS during development to force a refetch. A hard refresh
+     (Ctrl/Cmd+Shift+R) works too, but this means a normal refresh is enough
+     without having to remember to hard-refresh every time. -->
+<link rel="stylesheet" href="../shared/tokens.css?v=1">
+<link rel="stylesheet" href="../shared/base.css?v=1">
+<link rel="stylesheet" href="src/app.css?v=3">
+</head>
+<body>
+<div id="app">
+
+  <!-- ── Header — shared by all three tools ─────────────────────────────── -->
+  <header>
+    <div class="logo">
+      <div class="logo-icon">🧪</div>
+      LLM Local Lab
+    </div>
+
+    <!-- Chat / A-B Diff / Eval Harness — same button-toggle pattern the old
+         Lab Eval already used between Diff and Eval; Chat is just a third
+         button now instead of a second Docker container on a second port. -->
+    <div class="main-tabs" id="main-tabs">
+      <button class="main-tab active" data-view="chat">💬 Chat</button>
+      <button class="main-tab" data-view="diff">⇄ A/B Diff</button>
+      <button class="main-tab" data-view="eval">📊 Eval Harness</button>
+    </div>
+
+    <div class="header-sep"></div>
+
+    <button class="header-btn" id="manage-models-btn" title="Pull or delete models">
+      ⚙ Manage Models
+    </button>
+
+    <button class="header-btn" id="history-btn" title="Saved chat conversations">
+      🕘 Chat History
+    </button>
+
+    <button class="header-btn" id="eval-history-btn" title="Saved eval runs">
+      🕘 Eval Runs
+    </button>
+
+    <div class="status-dot" id="status-dot"></div>
+    <span class="status-label" id="status-label">Connecting…</span>
+  </header>
+
+  <!-- ── Chat view ───────────────────────────────────────────────────────── -->
+  <div class="view" id="view-chat">
+    <div class="workspace">
+
+      <!-- Populated by buildParamPanelHTML('CHAT', 'Chat', false) — same
+           generator that builds the Diff (L/R) and Eval (BASE) panels, so
+           Chat's model select / system prompt / generation params live in
+           exactly one place in the code instead of a hand-written copy. -->
+      <aside class="params-panel" id="param-panel-CHAT"></aside>
+
+      <main class="chat-panel">
+        <div class="messages-container" id="messages-chat">
+          <div class="welcome" id="welcome-chat">
+            <div class="welcome-icon">🧪</div>
+            <h2>LLM Local Lab</h2>
+            <p>A research interface for comparing models and tuning parameters. Select a model on the left, adjust parameters, then start a conversation.</p>
+            <div class="welcome-shortcuts">
+              <span class="shortcut-badge">Enter to send · Shift+Enter for a new line</span>
+              <span class="shortcut-badge">New Chat resets history</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="input-area">
+          <div class="input-row">
+            <textarea id="user-input-chat" placeholder="Type a message… (Enter to send)" rows="1"></textarea>
+            <button id="stop-btn-chat" title="Stop generation">
+              <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
+            </button>
+            <button id="send-btn-chat" title="Send (Enter)">
+              <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M22 2L11 13" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M22 2L15 22l-4-9-9-4 20-7z" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+          </div>
+          <div class="input-hint">Enter to send · Shift+Enter for a new line · Parameters applied to every request</div>
+        </div>
+      </main>
+
+    </div>
+  </div>
+
+  <!-- ── A/B Diff view ──────────────────────────────────────────────────── -->
+  <div class="view hidden" id="view-diff">
+    <div class="diff-workspace">
+
+      <aside class="param-side param-side-L" id="param-panel-L"></aside>
+
+      <div class="chat-side" id="chat-side-L">
+        <div class="messages-container" id="messages-L">
+          <div class="welcome" id="welcome-L">
+            <div class="welcome-icon">◀</div>
+            <h2>Left</h2>
+            <p>Pick a model and tune parameters on the left panel, then send a prompt below.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="diff-divider" id="diff-divider"></div>
+
+      <div class="chat-side" id="chat-side-R">
+        <div class="messages-container" id="messages-R">
+          <div class="welcome" id="welcome-R">
+            <div class="welcome-icon">▶</div>
+            <h2>Right</h2>
+            <p>Pick a model and tune parameters on the right panel — independent from the left.</p>
+          </div>
+        </div>
+      </div>
+
+      <aside class="param-side param-side-R" id="param-panel-R"></aside>
+
+    </div>
+
+    <div class="input-area">
+      <div class="input-row">
+        <textarea id="user-input-diff" placeholder="Type a message… sent to both Left and Right (Enter to send)" rows="1"></textarea>
+        <button id="stop-btn-diff" title="Stop both streams">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
+        </button>
+        <button id="send-btn-diff" title="Send to both (Enter)">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M22 2L11 13" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M22 2L15 22l-4-9-9-4 20-7z" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
+      <div class="input-hint">Enter to send · Shift+Enter for a new line · One prompt fires both configurations in parallel</div>
+    </div>
+  </div>
+
+  <!-- ── Eval Harness view ──────────────────────────────────────────────── -->
+  <div class="view hidden" id="view-eval">
+    <div class="eval-layout">
+
+      <aside class="eval-sidebar">
+        <div class="section-title">Prompt Dataset</div>
+        <textarea
+          class="eval-dataset-textarea"
+          id="eval-dataset"
+          placeholder="One prompt per line…&#10;&#10;For multi-line prompts, separate entries with a line&#10;containing only ---"
+        ></textarea>
+        <div class="eval-dataset-toolbar">
+          <span class="eval-dataset-count" id="eval-dataset-count">0 prompts</span>
+          <button class="header-btn" id="eval-import-btn">📂 Import .txt / .json</button>
+          <input type="file" id="eval-file-input" accept=".txt,.json,application/json,text/plain" hidden>
+        </div>
+
+        <div class="eval-config-block">
+          <button type="button" class="eval-config-label eval-config-toggle" id="base-config-toggle" aria-expanded="false">
+            <span class="side-badge side-badge-BASE">⚙</span>
+            <span class="section-title" style="padding:0">Base Config</span>
+            <span class="eval-config-chevron" id="base-config-chevron">▸</span>
+          </button>
+          <div class="param-card" id="param-panel-BASE" style="display:none"></div>
+          <div class="param-hint" id="base-config-hint" style="padding:0 2px; display:none">Fixed for every cell — unless a parameter below is swept as an axis, in which case its axis values override this.</div>
+        </div>
+
+        <div class="eval-config-block">
+          <div class="eval-config-label">
+            <span class="section-title" style="padding:0">Axes</span>
+          </div>
+          <div id="axis-list"></div>
+          <button class="btn btn-ghost axis-add-btn" id="add-axis-btn">+ Add axis</button>
+        </div>
+
+        <div class="eval-config-block">
+          <div class="param-row"><span class="param-label">Repeat each cell</span></div>
+          <input type="number" class="param-number" id="repeat-count-input" min="1" max="20" value="1">
+          <div class="param-hint">Run each cell N times to see if a good score was reliable or a lucky draw.</div>
+        </div>
+
+        <div class="eval-config-block">
+          <label class="eval-config-label" style="cursor:pointer">
+            <input type="checkbox" id="hosted-baseline-toggle">
+            <span class="section-title" style="padding:0">Hosted baseline (optional)</span>
+          </label>
+          <div id="hosted-baseline-fields" style="display:none">
+            <input type="text" class="param-number hosted-input" id="hosted-endpoint-input" placeholder="Endpoint, e.g. https://api.openai.com/v1">
+            <input type="text" class="param-number hosted-input" id="hosted-model-input" placeholder="Model, e.g. gpt-4o-mini">
+            <input type="password" class="param-number hosted-input" id="hosted-apikey-input" placeholder="API key (optional)">
+          </div>
+        </div>
+
+        <div class="sweep-preview" id="sweep-preview">1 cell × 0 prompts × 1 repeat = 0 generations</div>
+
+        <div class="eval-run-actions">
+          <button class="btn btn-primary" id="run-eval-btn">▶ Run Sweep</button>
+          <button class="btn btn-danger-ghost" id="stop-eval-btn" style="display:none">⏹ Stop Eval</button>
+        </div>
+      </aside>
+
+      <div class="eval-main">
+
+        <div class="eval-progress-wrap" id="eval-progress-wrap" style="display:none">
+          <div class="eval-progress-text">
+            <span id="eval-progress-label">Idle</span>
+            <span class="val" id="eval-progress-pct">0%</span>
+          </div>
+          <div class="eval-progress-track"><div class="eval-progress-fill" id="eval-progress-fill"></div></div>
+        </div>
+
+        <div class="eval-table-wrap" id="eval-grid-wrap" style="display:none">
+          <div class="grid-controls" id="grid-controls">
+            <label>Color by <select id="grid-color-by"></select></label>
+            <div id="grid-axis-pickers" class="grid-axis-pickers"></div>
+            <span class="grid-legend">Each cell is an average across every prompt (and repeat) run for that config — hover a cell for the exact count.</span>
+          </div>
+          <div id="eval-grid"></div>
+          <div id="eval-grid-detail" class="grid-detail"></div>
+        </div>
+        <div class="eval-empty-state" id="eval-empty-state">
+          <div class="welcome-icon">📊</div>
+          <h2>No results yet</h2>
+          <p>Add prompts to the dataset, set up your axes in the sidebar, then click Run Sweep. The grid fills in live as each cell completes.</p>
+        </div>
+
+        <!-- ── AI Evaluation panel — one combined judge-model call per
+             generation, covering only the checked dimensions. Repeat
+             variance (when repeat_count ≥ 2) is computed server-side as
+             part of the same request, so there's no separate button for
+             it any more. ──────────────────────────────────────────────── -->
+        <div class="scorer-panel ai-eval-panel">
+          <span class="scorer-panel-label">AI Evaluation</span>
+          <label class="ai-eval-judge-model">Judge model
+            <select id="judge-model-select"></select>
+          </label>
+          <label class="ai-eval-dim"><input type="checkbox" id="dim-completeness" checked> Completeness</label>
+          <label class="ai-eval-dim"><input type="checkbox" id="dim-correctness" checked> Correctness</label>
+          <label class="ai-eval-dim"><input type="checkbox" id="dim-hallucination_risk" checked> Hallucination Risk</label>
+          <button class="btn btn-ghost" id="run-ai-eval-btn">Run AI Evaluation</button>
+          <span class="scorer-description" id="ai-eval-status"></span>
+        </div>
+
+        <!-- ── Dedicated AI Evaluation grid (redesign item 3) — shows ONLY
+             llm-judge:<dimension> scores, one dimension at a time via the
+             tab strip below, using the SAME row/column/held-axis layout as
+             the main grid above (see ai-eval-grid.js's use of
+             gridView.getAxisState()). Hidden until at least one AI
+             Evaluation pass has scored the current run. ─────────────────── -->
+        <div class="eval-table-wrap ai-eval-grid-wrap" id="ai-eval-grid-wrap" style="display:none">
+          <div class="grid-controls">
+            <div class="ai-eval-dim-tabs" id="ai-eval-dim-tabs"></div>
+            <label><input type="checkbox" id="ai-eval-variance-toggle"> Show variance instead of score</label>
+            <span class="grid-legend">AI Evaluation scores only, on the same row/column axes as the grid above — click a cell to jump to its full judgments below.</span>
+          </div>
+          <div id="ai-eval-grid"></div>
+        </div>
+
+        <div class="eval-export-actions">
+          <button class="btn btn-ghost" id="export-json-btn" disabled>⬇ Export JSON</button>
+          <button class="btn btn-ghost" id="export-md-btn" disabled>⬇ Export Markdown</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<!-- ── Manage Models modal (merged: browse/pull library + installed list) ── -->
+<div class="modal-overlay" id="models-modal-overlay">
+  <div id="models-modal">
+    <div class="modal-header">
+      <span class="modal-title">⚙ Manage Models</span>
+      <button class="modal-close" id="models-modal-close" title="Close">✕</button>
+    </div>
+
+    <div class="modal-search-wrap">
+      <input id="modal-search" type="text" placeholder="Search models… (e.g. llama, mistral, qwen, code)">
+    </div>
+    <div class="modal-tabs" id="modal-tabs"></div>
+    <div class="modal-status-bar">
+      <span id="modal-status">Loading…</span>
+    </div>
+    <div class="modal-list" id="modal-list">
+      <div class="modal-empty">Loading…</div>
+    </div>
+    <div class="modal-footer">
+      <input id="modal-custom-input" type="text" placeholder="Or type a custom model name (e.g. mistral:7b-q4_0)">
+      <button id="modal-pull-custom">Pull</button>
+    </div>
+    <div class="models-pull-progress" id="models-pull-progress">
+      <div class="pull-spinner"></div>
+      <span class="pull-status-text" id="models-pull-status">Starting…</span>
+      <div class="pull-progress-row">
+        <div class="pull-bar-track"><div class="pull-bar-fill" id="models-pull-bar"></div></div>
+      </div>
+    </div>
+
+    <div class="section-title" style="margin-top:10px">Installed Models</div>
+    <div class="modal-list" id="models-installed-list">
+      <div class="modal-empty">Loading…</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Delete confirmation modal (shared by every "delete a model" button) ── -->
+<div class="modal-overlay" id="delete-modal-overlay">
+  <div id="delete-modal">
+    <div class="del-icon">🗑</div>
+    <div class="del-title">Delete model?</div>
+    <div class="del-body">
+      This will permanently remove <strong id="del-model-name"></strong> from disk. You can re-pull it anytime.
+    </div>
+    <div class="del-actions">
+      <button id="del-cancel-btn" class="del-btn del-btn-cancel">Cancel</button>
+      <button id="del-confirm-btn" class="del-btn del-btn-confirm">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Chat conversation history modal ─────────────────────────────────── -->
+<div id="history-modal-overlay">
+  <div id="history-modal">
+    <div class="modal-header">
+      <span class="modal-title">🕘 Saved Conversations</span>
+      <button class="modal-close" id="history-close-btn" title="Close">✕</button>
+    </div>
+    <div class="modal-list" id="history-list">
+      <div class="modal-empty">Loading…</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Eval run history modal ──────────────────────────────────────────── -->
+<div id="eval-history-modal-overlay">
+  <div id="eval-history-modal">
+    <div class="modal-header">
+      <span class="modal-title">🕘 Saved Eval Runs</span>
+      <button class="modal-close" id="eval-history-close-btn" title="Close">✕</button>
+    </div>
+    <div class="modal-list" id="eval-history-list">
+      <div class="modal-empty">Loading…</div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script type="module" src="src/app.js?v=3"></script>
+</body>
+</html>

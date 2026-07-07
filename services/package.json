@@ -1,0 +1,9 @@
+{
+  "name": "llm-local-lab-frontend-tests",
+  "private": true,
+  "type": "module",
+  "description": "Optional jsdom-based smoke/functional tests for Lab App (Chat, A/B Diff, Eval Harness). Not needed to run the app itself — only for `node smoke_test.mjs` etc. See README.md > Testing.",
+  "devDependencies": {
+    "jsdom": "^29.1.1"
+  }
+}
