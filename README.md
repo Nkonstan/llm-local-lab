@@ -278,4 +278,5 @@ Each rebuilds only that one container and restarts it without touching Ollama or
 - **No hard cap on axis/value counts.** A 10×10 sweep over 50 prompts is 5,000 generations — `EVAL_MAX_CONCURRENCY` protects Ollama from being hit all at once, but it won't stop you from queuing up a sweep that takes a long time to finish. Size sweeps with your own hardware in mind.
 - **Hosted-baseline timing is approximate.** OpenAI-compatible streaming APIs don't expose Ollama's internal timing fields, so tokens/sec for that one reference cell is estimated from wall-clock time and a ~4-chars/token heuristic — good enough to tell "same ballpark as local" apart from "way off," not a precise benchmark.
 
-[![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+License
+Apache 2.0 © 2026 [Nikolaos Konstantinou](https://github.com/Nkonstan)
