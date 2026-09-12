@@ -280,4 +280,4 @@ Each rebuilds only that one container and restarts it without touching Ollama or
 
 ## License
 
-MIT © 2026 [Nkonstan](https://github.com/Nkonstan/llm-local-lab)
+MIT © 2026 [Nikolaos Konstantinou](https://github.com/Nkonstan)
